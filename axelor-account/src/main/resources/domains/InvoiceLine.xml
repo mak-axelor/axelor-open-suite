@@ -20,7 +20,7 @@
     <decimal name="inTaxPrice" title="Unit price A.T.I." precision="20" scale="10"/>
     <decimal name="priceDiscounted" title="Unit price discounted" precision="20" scale="10"/>
     <many-to-one name="unit" ref="com.axelor.apps.base.db.Unit" title="Unit"/>
-    <decimal name="qty" title="Qty" precision="20" scale="10"/>
+    <decimal name="qty" title="Qty" precision="20" scale="10" default="1"/>
     <decimal name="oldQty" hidden="true" precision="20" scale="10"/>
     <decimal name="exTaxTotal" title="Total W.T." scale="3" precision="20" readonly="true"/>
     <decimal name="inTaxTotal" title="Total A.T.I." scale="3" precision="20"/>
@@ -113,6 +113,20 @@
 
     <decimal name="coefficient" title="Coefficient" scale="12" precision="20" default="1"
       min="0" max="1" nullable="true"/>
+
+    <!-- AOP TEST FEATURE SOUS LIGNES -->
+
+    <one-to-many name="subInvoiceLineList" ref="com.axelor.apps.account.db.InvoiceLine"
+      mappedBy="parentLine" title="Sub invoice lines"/>
+    <many-to-one name="parentLine" ref="com.axelor.apps.account.db.InvoiceLine"
+      title="Parent line"/>
+    <many-to-one name="rootInvoice" ref="com.axelor.apps.account.db.Invoice"
+      title="Invoice order"/>
+    <decimal name="qtyBeforeUpdate" title="Qty before update" precision="20" scale="10"
+      default="1"/>
+    <decimal name="priceBeforeUpdate" title="Price before update"/>
+    <string name="lineIndex" title="Index" readonly="true"/>
+    <integer name="invoiceLineListSize"/>
 
     <extra-code>
 		<![CDATA[

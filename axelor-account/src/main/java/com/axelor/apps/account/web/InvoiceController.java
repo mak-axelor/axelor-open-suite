@@ -37,6 +37,7 @@ import com.axelor.apps.account.service.invoice.InvoiceLineGroupService;
 import com.axelor.apps.account.service.invoice.InvoiceLineService;
 import com.axelor.apps.account.service.invoice.InvoiceLineTaxGroupService;
 import com.axelor.apps.account.service.invoice.InvoiceService;
+import com.axelor.apps.account.service.invoice.InvoiceServiceDemo;
 import com.axelor.apps.account.service.invoice.InvoiceTermPfpService;
 import com.axelor.apps.account.service.invoice.InvoiceTermService;
 import com.axelor.apps.account.service.invoice.InvoiceToolService;
@@ -1293,5 +1294,30 @@ public class InvoiceController {
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }
+  }
+
+  public void onLineChange(ActionRequest request, ActionResponse response) throws AxelorException {
+    Invoice invoice = request.getContext().asType(Invoice.class);
+    if (invoice == null) {
+      return;
+    }
+
+    Map<String, Object> context = request.getRawContext();
+    if (context.get("expendableInvoiceLineList") == null) {
+      return;
+    }
+    InvoiceServiceDemo invoiceService = Beans.get(InvoiceServiceDemo.class);
+    InvoiceLine dirtyLine =
+        invoiceService.findDirtyLine(
+            (List<Map<String, Object>>) context.get("expendableInvoiceLineList"));
+    if (dirtyLine == null) {
+      return;
+    }
+
+    invoiceService.updateRelatedLines(dirtyLine, invoice);
+
+    invoiceService.synchronizeInvoiceLineList(invoice);
+
+    response.setValues(invoice);
   }
 }

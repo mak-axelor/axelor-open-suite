@@ -248,6 +248,9 @@
 	      id]]>
     </integer>
 
+    <one-to-many name="expendableInvoiceLineList"
+      ref="com.axelor.apps.account.db.InvoiceLine" mappedBy="rootInvoice" title="Invoice lines"/>
+
 
     <!-- Invoice terms -->
     <integer name="paymentProgress" title="Payment progress" default="0"/>
