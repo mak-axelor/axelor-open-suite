@@ -131,7 +131,6 @@
     <field name="price" colSpan="3"
       onChange="action-sale-order-line-method-onchange-price,action-sale-order-line-method-compute,action-sale-order-line-method-compute-analytic-distribution"/>
     <field name="unit" form-view="unit-form" grid-view="unit-grid"/>
-    <field name="inTaxPrice"/>
     <field name="exTaxTotal" aggregate="sum"/>
     <field name="inTaxTotal" aggregate="sum"/>
     <field name="description"/>

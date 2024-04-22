@@ -155,21 +155,26 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
       throws AxelorException {
     for (SaleOrderLine saleOrderLine : expendableSaleOrderLineList) {
       if (isOrHasDirtyLine(saleOrderLine, dirtyLine)) {
-        compute(saleOrderLine, saleOrder);
+        compute(saleOrderLine, saleOrder, saleOrderLine.getLineIndex());
       }
     }
   }
 
-  protected void compute(SaleOrderLine saleOrderLine, SaleOrder saleOrder) throws AxelorException {
+  protected void compute(SaleOrderLine saleOrderLine, SaleOrder saleOrder, String parent)
+      throws AxelorException {
     List<SaleOrderLine> items = saleOrderLine.getSubSaleOrderLineList();
     if (ObjectUtils.isEmpty(items)) {
       return;
     }
     BigDecimal quantity = saleOrderLine.getQty();
     BigDecimal totalPrice = BigDecimal.ZERO;
+    int i = 1;
+
     for (SaleOrderLine line : items) {
-      compute(line, saleOrder);
+      line.setLineIndex(parent + "." + i);
+      compute(line, saleOrder, parent + "." + i);
       totalPrice = totalPrice.add(line.getExTaxTotal());
+      i++;
     }
     totalPrice = quantity.equals(BigDecimal.ZERO) ? BigDecimal.ZERO : totalPrice;
     BigDecimal price =
@@ -314,5 +319,14 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
         .collect(Collectors.maxBy(Integer::compareTo))
         .map(max -> String.valueOf(max + 1))
         .orElse("1");
+  }
+
+  public void recalculateAllPrices(Context context, SaleOrder saleOrder) throws AxelorException {
+    int i = 1;
+    for (SaleOrderLine saleOrderLine : saleOrder.getExpendableSaleOrderLineList()) {
+      saleOrderLine.setLineIndex(String.valueOf(i));
+      compute(saleOrderLine, saleOrder, String.valueOf(i));
+      i++;
+    }
   }
 }

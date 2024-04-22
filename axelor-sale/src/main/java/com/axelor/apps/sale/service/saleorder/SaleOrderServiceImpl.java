@@ -18,6 +18,8 @@
  */
 package com.axelor.apps.sale.service.saleorder;
 
+import com.axelor.apps.account.db.TaxLine;
+import com.axelor.apps.account.db.repo.TaxLineRepository;
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Product;

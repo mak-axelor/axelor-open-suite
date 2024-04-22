@@ -684,7 +684,10 @@ public class SaleOrderController {
     SaleOrderLine dirtyLine =
         multiLevelSaleOrderLineService.findDirtyLine(
             (List<Map<String, Object>>) context.get("expendableSaleOrderLineList"));
+
     if (dirtyLine == null) {
+      Beans.get(MultiLevelSaleOrderLineService.class)
+          .recalculateAllPrices(request.getContext(), saleOrder);
       Beans.get(SaleOrderService.class).removeLines(saleOrder);
       Beans.get(SaleOrderOnLineChangeService.class).onLineChange(saleOrder);
       response.setValues(saleOrder);

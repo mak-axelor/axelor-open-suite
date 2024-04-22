@@ -15,4 +15,6 @@ public interface MultiLevelSaleOrderLineService {
       throws AxelorException;
 
   SaleOrderLine findDirtyLine(List<Map<String, Object>> list);
+
+  void recalculateAllPrices(Context context, SaleOrder saleOrder) throws AxelorException;
 }
