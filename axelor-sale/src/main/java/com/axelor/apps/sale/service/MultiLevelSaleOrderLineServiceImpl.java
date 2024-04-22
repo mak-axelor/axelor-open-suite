@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 
 public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLineService {
 
@@ -73,6 +74,9 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
   public List<SaleOrderLine> updateRelatedLines(SaleOrderLine dirtyLine, SaleOrder saleOrder)
       throws AxelorException {
     List<SaleOrderLine> expendableSaleOrderLineList = saleOrder.getExpendableSaleOrderLineList();
+    if (CollectionUtils.isEmpty(expendableSaleOrderLineList)) {
+      return expendableSaleOrderLineList;
+    }
     updateChild(dirtyLine, saleOrder);
     replaceDirtyLine(dirtyLine, expendableSaleOrderLineList);
     updateParent(dirtyLine, expendableSaleOrderLineList, saleOrder);

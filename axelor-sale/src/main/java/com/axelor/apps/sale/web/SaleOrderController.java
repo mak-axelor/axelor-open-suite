@@ -685,11 +685,16 @@ public class SaleOrderController {
         multiLevelSaleOrderLineService.findDirtyLine(
             (List<Map<String, Object>>) context.get("expendableSaleOrderLineList"));
     if (dirtyLine == null) {
+      Beans.get(SaleOrderService.class).removeLines(saleOrder);
+      Beans.get(SaleOrderOnLineChangeService.class).onLineChange(saleOrder);
+      response.setValues(saleOrder);
       return;
     }
 
     multiLevelSaleOrderLineService.updateRelatedLines(dirtyLine, saleOrder);
-
+    if (Beans.get(AppSaleService.class).getAppSale().getActivateMultiLevelSaleOrderLines()) {
+      Beans.get(SaleOrderService.class).synchronizeSaleOrderLineList(saleOrder);
+    }
     Beans.get(SaleOrderOnLineChangeService.class).onLineChange(saleOrder);
 
     response.setValues(saleOrder);

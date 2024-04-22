@@ -105,4 +105,6 @@ public interface SaleOrderService {
   boolean isIncotermRequired(SaleOrder saleOrder);
 
   void synchronizeSaleOrderLineList(SaleOrder saleOrder);
+
+  void removeLines(SaleOrder saleOrder);
 }

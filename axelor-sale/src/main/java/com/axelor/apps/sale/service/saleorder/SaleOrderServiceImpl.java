@@ -52,9 +52,11 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import wslite.json.JSONException;
@@ -427,6 +429,20 @@ public class SaleOrderServiceImpl implements SaleOrderService {
     copy.clearSubSaleOrderLineList();
     copy.setParentLine(null);
     copy.setRootSaleOrder(null);
+    copy.setParentCid(saleOrderLine.getCid());
     saleOrder.addSaleOrderLineListItem(copy);
+  }
+
+  @Override
+  public void removeLines(SaleOrder saleOrder) {
+    Set<Long> expendableSaleOrderLineCids = new HashSet<>();
+    for (SaleOrderLine saleOrderLine : saleOrder.getExpendableSaleOrderLineList()) {
+      expendableSaleOrderLineCids.add(saleOrderLine.getCid());
+    }
+    List<SaleOrderLine> saleOrderLineList = saleOrder.getSaleOrderLineList();
+    saleOrder.setSaleOrderLineList(
+        saleOrderLineList.stream()
+            .filter(line -> expendableSaleOrderLineCids.contains(line.getParentCid()))
+            .collect(Collectors.toList()));
   }
 }

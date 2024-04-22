@@ -136,6 +136,7 @@
     <decimal name="priceBeforeUpdate" title="Price before update"/>
     <string name="lineIndex" title="Index" readonly="true"/>
     <integer name="saleOrderLineListSize"/>
+    <long name="parentCid"/>
 
 
     <finder-method name="findAllBySaleOrder" using="saleOrder" all="true"/>
