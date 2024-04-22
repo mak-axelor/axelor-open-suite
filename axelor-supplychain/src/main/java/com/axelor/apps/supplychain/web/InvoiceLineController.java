@@ -49,7 +49,7 @@ public class InvoiceLineController {
     try {
       Context context = request.getContext();
       InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
-      Invoice invoice = request.getContext().getParent().asType(Invoice.class);
+      Invoice invoice = this.getInvoice(context);
 
       Beans.get(InvoiceLineSupplychainService.class)
           .checkMinQty(invoice, invoiceLine, request, response);

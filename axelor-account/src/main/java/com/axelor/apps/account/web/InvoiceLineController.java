@@ -25,6 +25,7 @@ import com.axelor.apps.account.db.FixedAssetCategory;
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.apps.account.db.TaxLine;
+import com.axelor.apps.account.db.repo.AccountConfigRepository;
 import com.axelor.apps.account.db.repo.AccountRepository;
 import com.axelor.apps.account.db.repo.AccountTypeRepository;
 import com.axelor.apps.account.db.repo.InvoiceLineRepository;
@@ -57,6 +58,7 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Context;
+import com.axelor.studio.db.AppAccount;
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import java.math.BigDecimal;
@@ -65,6 +67,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -299,19 +302,14 @@ public class InvoiceLineController {
 
     Context parentContext = context.getParent();
 
-    Invoice invoice;
-
-    if (parentContext == null
-        || !parentContext.getContextClass().toString().equals(Invoice.class.toString())) {
-
-      InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
-
-      invoice = invoiceLine.getInvoice();
-    } else {
-      invoice = parentContext.asType(Invoice.class);
+    if (parentContext == null) {
+      return null;
     }
 
-    return invoice;
+    if (parentContext.getContextClass().equals(Invoice.class)) {
+      return parentContext.asType(Invoice.class);
+    }
+    return getInvoice(parentContext);
   }
 
   public void getAccount(ActionRequest request, ActionResponse response) {
@@ -498,9 +496,10 @@ public class InvoiceLineController {
 
   public void printAnalyticAccounts(ActionRequest request, ActionResponse response) {
     try {
-      InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
-      if (request.getContext().getParent() != null) {
-        Invoice invoice = request.getContext().getParent().asType(Invoice.class);
+      Context context = request.getContext();
+      InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
+      if (context.getParent() != null) {
+        Invoice invoice = this.getInvoice(context);
         if (invoiceLine != null && invoice != null) {
           Beans.get(AnalyticLineService.class)
               .setAnalyticAccount(invoiceLine, invoice.getCompany());
@@ -610,5 +609,219 @@ public class InvoiceLineController {
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }
+  }
+
+  public void setOperationType(ActionRequest request, ActionResponse response) {
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    response.setValue("$_operationTypeSelect", invoice.getOperationTypeSelect());
+    response.setValue("$_company", invoice.getCompany());
+  }
+
+  public void onNewAndLoad(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    if (Beans.get(AppBaseService.class).isApp("business-project")) {
+      response.setAttr(
+          "saleOrder",
+          "hidden",
+          invoice.getOperationTypeSelect() != 3 && invoice.getOperationTypeSelect() != 4);
+      response.setAttr(
+          "purchaseOrder",
+          "hidden",
+          invoice.getOperationTypeSelect() != 1 && invoice.getOperationTypeSelect() != 2);
+
+      response.setAttr(
+          "saleOrderLine",
+          "hidden",
+          invoice.getOperationTypeSelect() != 3 && invoice.getOperationTypeSelect() != 4);
+
+      response.setAttr(
+          "purchaseOrderLine",
+          "hidden",
+          invoice.getOperationTypeSelect() != 1 && invoice.getOperationTypeSelect() != 2);
+    }
+    response.setAttr("accountingPanel", "hidden", invoice.getOperationTypeSelect() == 2);
+    response.setAttr("$isFilterOnSupplier", "hidden", invoice.getOperationSubTypeSelect() > 2);
+
+    if (invoice.getInAti()) {
+      response.setAttr(
+          "priceDiscounted",
+          "hidden",
+          Objects.equals(invoiceLine.getPriceDiscounted(), invoiceLine.getPrice()));
+    } else {
+      response.setAttr(
+          "priceDiscounted",
+          "hidden",
+          Objects.equals(invoiceLine.getPriceDiscounted(), invoiceLine.getInTaxPrice()));
+    }
+
+    if (Beans.get(AppAccount.class).getManageAnalyticAccounting()) {
+      response.setAttr(
+          "analyticDistributionTemplate",
+          "required",
+          invoice.getStatusSelect() > 1
+              && CollectionUtils.isNotEmpty(invoiceLine.getAnalyticMoveLineList())
+              && invoiceLine.getAccount().getAnalyticDistributionAuthorized()
+              && invoiceLine.getAccount().getAnalyticDistributionRequiredOnInvoiceLines());
+    }
+
+    response.setAttr("customerInvoicePanel", "hidden", invoice.getOperationTypeSelect() < 3);
+    response.setAttr("supplierInvoicePanel", "hidden", invoice.getOperationTypeSelect() > 2);
+  }
+
+  public void setCutOffDatesToRequired(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    response.setAttr(
+        "cutOffStartDate",
+        "required",
+        invoiceLine.getAccount() != null
+            && invoiceLine.getAccount().getManageCutOffPeriod()
+            && invoice.getOperationSubTypeSelect() != 2);
+    response.setAttr(
+        "cutOffEndDate",
+        "required",
+        invoiceLine.getAccount() != null
+            && invoiceLine.getAccount().getManageCutOffPeriod()
+            && invoice.getOperationSubTypeSelect() != 2);
+  }
+
+  public void setAnalyticDistributionTemplateToRequired(
+      ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    if (Beans.get(AppAccount.class).getManageAnalyticAccounting()) {
+      response.setAttr(
+          "analyticDistributionTemplate",
+          "required",
+          invoice.getStatusSelect() > 1
+              && CollectionUtils.isNotEmpty(invoiceLine.getAnalyticMoveLineList())
+              && invoiceLine.getAccount().getAnalyticDistributionAuthorized()
+              && invoiceLine.getAccount().getAnalyticDistributionRequiredOnInvoiceLines());
+    }
+  }
+
+  public void setFormFieldsToReadOnly(ActionRequest request, ActionResponse response) {
+    Invoice invoice = this.getInvoice(request.getContext());
+    response.setAttr("titlePanel", "readonly", invoice.getStatusSelect() > 1);
+    response.setAttr("informationsPanel", "readonly", invoice.getStatusSelect() > 1);
+    response.setAttr("description", "readonly", invoice.getStatusSelect() > 1);
+    response.setAttr("projectPanel", "readonly", invoice.getStatusSelect() > 1);
+    response.setAttr("analyticDistributionPanel", "readonly", invoice.getStatusSelect() > 2);
+    response.setAttr("accountingPanel", "readonly", invoice.getStatusSelect() > 2);
+  }
+
+  public void setProjectDomain(ActionRequest request, ActionResponse response) {
+    Invoice invoice = this.getInvoice(request.getContext());
+    if (invoice.getOperationTypeSelect() == 3 || invoice.getOperationTypeSelect() == 4) {
+      response.setAttr(
+          "project",
+          "domain",
+          "self.clientPartner.id = "
+              + invoice.getPartner().getId()
+              + " AND self.isBusinessProject = true");
+    }
+    if (invoice.getOperationTypeSelect() == 3 || invoice.getOperationTypeSelect() == 4) {
+      response.setAttr("project", "domain", "self.isBusinessProject = true");
+    }
+  }
+
+  public void setAnalyticDistributionTemplateDomain(
+      ActionRequest request, ActionResponse response) {
+    Invoice invoice = this.getInvoice(request.getContext());
+    response.setAttr(
+        "analyticDistributionTemplate",
+        "domain",
+        "self.company.id = " + invoice.getCompany().getId());
+  }
+
+  public void setDistributionLinesToReadOnly(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+    response.setAttr(
+        "analyticMoveLineList",
+        "readonly",
+        Beans.get(AccountConfigRepository.class)
+                    .findByCompany(invoice.getCompany())
+                    .getAnalyticDistributionTypeSelect()
+                != 1
+            || !invoiceLine.getAccount().getAnalyticDistributionAuthorized());
+  }
+
+  public void displayDifferentLanguageMessage(ActionRequest request, ActionResponse response) {
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    if (invoice != null
+        && invoice.getPartner() != null
+        && invoice.getPartner().getLocalization() != null
+        && invoice.getPartner().getLocalization().getLanguage() != null
+        && AuthUtils.getUser() != null
+        && AuthUtils.getUser().getLanguage() != null) {
+      response.setAttr(
+          "$differentLanguageMessage",
+          "hidden",
+          invoice
+              .getPartner()
+              .getLocalization()
+              .getLanguage()
+              .getCode()
+              .equals(AuthUtils.getUser().getLanguage()));
+      response.setAttr(
+          "$partnerLanguage",
+          "value",
+          invoice.getPartner().getLocalization().getLanguage().getCode().toUpperCase());
+    }
+  }
+
+  public void setProductDomain(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+
+    if (invoice != null
+        && invoice.getPartner() != null
+        && invoice.getPartner().getLocalization() != null
+        && invoice.getPartner().getLocalization().getLanguage() != null
+        && AuthUtils.getUser() != null
+        && AuthUtils.getUser().getLanguage() != null) {
+      if (invoice.getOperationTypeSelect() > 2) {
+        response.setAttr(
+            "product",
+            "domain",
+            "self.isModel = false AND self.dtype = 'Product' AND self.sellable = true");
+      }
+
+      if (invoice.getOperationTypeSelect() < 3) {
+        response.setAttr(
+            "product",
+            "domain",
+            "self.isModel = false AND self.dtype = 'Product' AND self.purchasable = true");
+      }
+    }
+  }
+
+  public void displayCoefficient(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+    response.setAttr(
+        "coefficient",
+        "hidden",
+        !Beans.get(AccountConfigRepository.class)
+            .findByCompany(invoice.getCompany())
+            .getIsInvoiceCoefficientEnabled());
+  }
+
+  public void setHiddenAnalyticDistributionPanel(ActionRequest request, ActionResponse response) {
+    InvoiceLine invoiceLine = request.getContext().asType(InvoiceLine.class);
+    Invoice invoice = this.getInvoice(request.getContext());
+    response.setAttr(
+        "analyticDistributionPanel",
+        "hidden",
+        !Beans.get(AppAccount.class).getManageAnalyticAccounting()
+            || invoice.getCompany().getAccountConfig().getManageAnalyticAccounting()
+            || invoiceLine.getAccount().getAnalyticDistributionAuthorized());
   }
 }

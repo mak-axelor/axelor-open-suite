@@ -107,7 +107,7 @@
         <panel name="customerInvoicePanel" colSpan="12">
           <field name="product" canEdit="false"
             onChange="action-group-account-invoice-line-product-onchange"
-            onSelect="action-invoice-line-attrs-set-product-domain-onselect"
+            onSelect="action-invoice-line-method-set-product-domain-onselect"
             form-view="product-form" grid-view="product-grid"/>
           <field name="$isFilterOnSupplier" title="Filter on supplier" type="boolean"
             widget="boolean-switch" colSpan="2"
@@ -119,7 +119,7 @@
         <panel name="supplierInvoicePanel" colSpan="12">
           <field name="product" canEdit="false"
             onChange="action-group-account-invoice-line-product-onchange"
-            onSelect="action-invoice-line-attrs-set-product-domain-onselect"
+            onSelect="action-invoice-line-method-set-product-domain-onselect"
             form-view="product-form" grid-view="product-purchase-grid"/>
           <field name="$isFilterOnSupplier" title="Filter on supplier" type="boolean"
             widget="boolean-switch" colSpan="2"
@@ -199,7 +199,7 @@
         if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.getApp('business-project').getProjectInvoiceLines()"
         title="Business Project" if-module="axelor-business-project">
         <field name="project" canEdit="false"
-          onSelect="action-invoice-line-attrs-domain-project" form-view="project-form"
+          onSelect="action-invoice-line-method-domain-project" form-view="project-form"
           grid-view="project-grid"/>
         <field name="previousProgress" readonly="true"/>
         <field name="newProgress" readonly="true"/>
@@ -207,7 +207,7 @@
           action="action-invoice-line-view-project-tasks" colSpan="12"/>
       </panel>
       <panel name="analyticDistributionPanel" title="Analytics" if-module="axelor-supplychain"
-        onTabSelect="action-invoice-line-attrs-read-only-distribution-lines">
+        onTabSelect="action-invoice-line-method-read-only-distribution-lines">
         <field name="analyticDistributionTemplate"
           grid-view="analytic-distribution-template-grid"
           form-view="analytic-distribution-template-form"
@@ -273,7 +273,7 @@
   <form name="invoice-line-client-form" title="Invoice line"
     model="com.axelor.apps.account.db.InvoiceLine" width="large"
     onNew="action-account-invoice-line-onnew-group"
-    onLoad="action-attrs-account-invoice-line-onnew-onload,action-invoice-line-attrs-readonly-form,action-attrs-account-invoice-line-cut-off-dates-required">
+    onLoad="action-attrs-account-invoice-line-onnew-onload,action-method-account-invoice-line-onnew-onload,action-invoice-line-method-readonly-form,action-method-account-invoice-line-cut-off-dates-required">
     <panel name="titlePanel">
       <field name="typeSelect" onChange="action-invoice-line-method-empty-line"/>
       <field name="productName" showIf="typeSelect == 1" title="Title"
@@ -341,32 +341,34 @@
   <action-group name="action-account-invoice-line-onnew-group">
     <action name="action-invoice-line-record-new"/>
     <action name="action-invoice-line-record-project"/>
-    <action name="action-invoice-line-record-operation-type"/>
+    <action name="action-invoice-line-method-operation-type"/>
     <action name="action-attrs-account-invoice-line-onnew-onload"/>
-    <action name="action-invoice-line-attrs-display-different-language-message"/>
+    <action name="action-method-account-invoice-line-onnew-onload"/>
+    <action name="action-invoice-line-method-display-different-language-message"/>
     <action name="action-invoice-line-method-manage-invoice-line-axis"/>
-    <action name="action-attrs-account-invoice-line-cut-off-dates-required"/>
-    <action name="action-invoice-line-attrs-set-hidden-analytic-distribution-panel"/>
+    <action name="action-method-account-invoice-line-cut-off-dates-required"/>
+    <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-method-set-scale"/>
-    <action name="action-invoice-line-attrs-display-coefficient"/>
+    <action name="action-invoice-line-method-display-coefficient"/>
   </action-group>
 
   <action-group name="action-group-account-invoice-line-onload">
     <action name="action-attrs-account-invoice-line-onnew-onload"/>
-    <action name="action-invoice-line-attrs-readonly-form"/>
-    <action name="action-invoice-line-record-operation-type"/>
+    <action name="action-method-account-invoice-line-onnew-onload"/>
+    <action name="action-invoice-line-method-readonly-form"/>
+    <action name="action-invoice-line-method-operation-type"/>
     <action name="action-invoice-line-attrs-set-isFilterOnSupplier"/>
-    <action name="action-invoice-line-attrs-display-different-language-message"/>
+    <action name="action-invoice-line-method-display-different-language-message"/>
     <action name="action-invoice-line-method-manage-invoice-line-axis"/>
-    <action name="action-attrs-account-invoice-line-cut-off-dates-required"/>
-    <action name="action-invoice-line-attrs-set-hidden-analytic-distribution-panel"/>
+    <action name="action-method-account-invoice-line-cut-off-dates-required"/>
+    <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-method-set-scale"/>
-    <action name="action-invoice-line-attrs-display-coefficient"/>
+    <action name="action-invoice-line-method-display-coefficient"/>
   </action-group>
 
   <action-group name="action-group-account-invoice-line-product-onchange">
     <action name="action-invoice-line-method-get-product-information"/>
-    <action name="action-invoice-line-record-account-onchange"
+    <action name="action-invoice-line-method-account-onchange"
       if="__config__.app.getApp('account').manageCutOffPeriod"/>
     <action name="action-invoice-line-method-compute"/>
     <action name="action-invoice-line-method-get-and-compute-analytic-distribution"/>
@@ -374,9 +376,10 @@
     <action name="action-invoice-line-method-get-fixed-asset-category"
       if="__config__.app.isApp('account')"/>
     <action name="action-attrs-account-invoice-line-onnew-onload"/>
+    <action name="action-method-account-invoice-line-onnew-onload"/>
     <action name="action-invoice-line-method-translate-product-description-and-name"/>
-    <action name="action-attrs-account-invoice-line-cut-off-dates-required"/>
-    <action name="action-invoice-line-attrs-set-hidden-analytic-distribution-panel"/>
+    <action name="action-method-account-invoice-line-cut-off-dates-required"/>
+    <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-method-set-scale"/>
     <action name="action-invoice-line-record-update-old-price-and-qty"/>
   </action-group>
@@ -396,21 +399,22 @@
 
   <action-group name="action-group-invoice-line-menu-form-onload">
     <action name="action-attrs-account-invoice-line-onnew-onload"/>
+    <action name="action-method-account-invoice-line-onnew-onload"/>
     <action name="action-invoice-line-attrs-readonly-menu-form"/>
     <action name="action-invoice-line-attrs-hidden-menu-form"/>
-    <action name="action-attrs-account-invoice-line-cut-off-dates-required"/>
+    <action name="action-method-account-invoice-line-cut-off-dates-required"/>
   </action-group>
 
   <action-group name="action-invoice-line-group-account-onchange">
-    <action name="action-attrs-account-invoice-line-account-onchange"/>
-    <action name="action-invoice-line-record-account-onchange"
+    <action name="action-method-account-invoice-line-account-onchange"/>
+    <action name="action-invoice-line-method-account-onchange"
       if="__config__.app.getApp('account').manageCutOffPeriod"/>
     <action name="action-account-invoice-line-method-account-onchange"/>
     <action name="action-invoice-line-method-manage-invoice-line-axis"/>
     <action name="action-invoice-line-method-axis-create-analytic-line"/>
     <action name="action-invoice-line-group-analytic-distribution-template-onchange"/>
-    <action name="action-attrs-account-invoice-line-cut-off-dates-required"/>
-    <action name="action-invoice-line-attrs-set-hidden-analytic-distribution-panel"/>
+    <action name="action-method-account-invoice-line-cut-off-dates-required"/>
+    <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-record-set-tax"/>
   </action-group>
 
@@ -437,11 +441,9 @@
     <field name="$isFilterOnSupplier" expr="eval:true"/>
   </action-record>
 
-  <action-record name="action-invoice-line-record-operation-type"
-    model="com.axelor.apps.account.db.InvoiceLine">
-    <field name="$_operationTypeSelect" expr="eval: __parent__?.operationTypeSelect"/>
-    <field name="$_company" expr="eval:__parent__?.company"/>
-  </action-record>
+  <action-method name="action-invoice-line-method-operation-type">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="setOperationType"/>
+  </action-method>
 
   <action-record name="action-invoice-line-record-reset-is-hide-unit-amounts"
     model="com.axelor.apps.account.db.InvoiceLine">
@@ -468,6 +470,10 @@
     <field name="project" expr="eval: __parent__?.project"
       if="__config__.app.isApp('business-project')"/>
   </action-record>
+
+  <action-method name="action-invoice-line-method-account-onchange">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="setProject"/>
+  </action-method>
 
   <!-- ACTION METHOD -->
 
@@ -598,22 +604,6 @@
     <attribute name="title" for="project"
       expr="eval:  __config__.app.getApp('project')?.getProjectLabel()"
       if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.isApp('project') &amp;&amp; !com.google.common.base.Strings.isNullOrEmpty(__config__.app.getApp('project')?.getProjectLabel())"/>
-    <attribute name="hidden" for="saleOrder"
-      expr="eval: __parent__?.operationTypeSelect != 3 &amp;&amp; __parent__?.operationTypeSelect != 4"
-      if="__config__.app.isApp('business-project')"/>
-    <attribute name="hidden" for="purchaseOrder"
-      expr="eval: __parent__?.operationTypeSelect != 1 &amp;&amp; __parent__?.operationTypeSelect != 2"
-      if="__config__.app.isApp('business-project')"/>
-    <attribute name="hidden" for="saleOrderLine"
-      expr="eval: __parent__?.operationTypeSelect != 3 &amp;&amp; __parent__?.operationTypeSelect != 4"
-      if="__config__.app.isApp('business-project')"/>
-    <attribute name="hidden" for="purchaseOrderLine"
-      expr="eval: __parent__?.operationTypeSelect != 1 &amp;&amp; __parent__?.operationTypeSelect != 2"
-      if="__config__.app.isApp('business-project')"/>
-    <attribute name="hidden" for="$isFilterOnSupplier"
-      expr="eval: __parent__?.operationTypeSelect &gt; 2"/>
-    <attribute name="hidden" for="accountingPanel"
-      expr="eval:__parent__?.operationSubTypeSelect==2"/>
     <!-- Scale and Precision -->
     <attribute name="scale" for="price"
       expr="eval: __config__.app.getNbDecimalDigitForUnitPrice()"/>
@@ -629,37 +619,24 @@
     <attribute name="scale" for="coefficient"
       expr="eval: __config__.app.getNbDecimalDigitForQty() + 2"/>
 
-    <!-- Show Price Discounted -->
-    <attribute name="hidden" for="priceDiscounted" expr="eval: priceDiscounted == price"
-      if="__parent__?._model == 'com.axelor.apps.account.db.Invoice' &amp;&amp; !__parent__?.inAti"/>
-    <attribute name="hidden" for="priceDiscounted"
-      expr="eval: priceDiscounted == inTaxPrice"
-      if="__parent__?._model == 'com.axelor.apps.account.db.Invoice' &amp;&amp; __parent__?.inAti"/>
-
-    <attribute name="required" for="analyticDistributionTemplate"
-      expr="__parent__?.statusSelect &gt; 1 &amp;&amp; analyticMoveLineList != null &amp;&amp; analyticMoveLineList.isEmpty() &amp;&amp; account?.analyticDistributionAuthorized &amp;&amp; account?.analyticDistributionRequiredOnInvoiceLines"
-      if="__config__.app.getApp('account')?.getManageAnalyticAccounting()"/>
-    <attribute name="hidden" for="customerInvoicePanel"
-      expr="eval: invoice != null ? invoice.operationTypeSelect &lt; 3 : __parent__?.operationTypeSelect &lt; 3"/>
-    <attribute name="hidden" for="supplierInvoicePanel"
-      expr="eval: invoice != null ? invoice.operationTypeSelect &gt; 2 : __parent__?.operationTypeSelect &gt; 2"/>
 
     <attribute name="selection-in" for="typeSelect"
       expr="eval: __config__.app.getApp('sale')?.enablePackManagement ? [0,1,2,3] : [0,1]"/>
   </action-attrs>
 
-  <action-attrs name="action-attrs-account-invoice-line-cut-off-dates-required">
-    <attribute name="required" for="cutOffStartDate"
-      expr="eval: account != null &amp;&amp; account.manageCutOffPeriod &amp;&amp; __parent__?.operationSubTypeSelect != 2"/>
-    <attribute name="required" for="cutOffEndDate"
-      expr="eval: account != null &amp;&amp; account.manageCutOffPeriod &amp;&amp; __parent__?.operationSubTypeSelect != 2"/>
-  </action-attrs>
+  <action-method name="action-method-account-invoice-line-onnew-onload">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="onNewAndLoad"/>
+  </action-method>
 
-  <action-attrs name="action-attrs-account-invoice-line-account-onchange">
-    <attribute name="required" for="analyticDistributionTemplate"
-      expr="__parent__?.statusSelect &gt; 1 &amp;&amp; analyticMoveLineList != null &amp;&amp; analyticMoveLineList.isEmpty() &amp;&amp; account?.analyticDistributionAuthorized &amp;&amp; account?.analyticDistributionRequiredOnInvoiceLines"
-      if="__config__.app.getApp('account')?.getManageAnalyticAccounting()"/>
-  </action-attrs>
+  <action-method name="action-method-account-invoice-line-cut-off-dates-required">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setCutOffDatesToRequired"/>
+  </action-method>
+
+  <action-method name="action-method-account-invoice-line-account-onchange">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setAnalyticDistributionTemplateToRequired"/>
+  </action-method>
 
   <action-attrs name="action-invoice-line-attrs-discountamount-title">
     <attribute name="title" for="discountAmount"
@@ -668,46 +645,25 @@
       expr="eval: com.axelor.i18n.I18n.get('Discount amount')" if="discountTypeSelect == 2"/>
   </action-attrs>
 
-  <action-attrs name="action-invoice-line-attrs-read-only-distribution-lines">
-    <attribute name="readonly" for="analyticMoveLineList"
-      expr="eval: __repo__(AccountConfig).findByCompany(__parent__.company)?.analyticDistributionTypeSelect != 1 || !account?.analyticDistributionAuthorized"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-read-only-distribution-lines">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setDistributionLinesToReadOnly"/>
+  </action-method>
 
-  <action-attrs
-    name="action-invoice-line-attrs-set-domain-analytic-distribution-template">
-    <attribute name="domain" for="analyticDistributionTemplate"
-      expr="eval: &quot; self.company.id = ${__parent__?.company.id} &quot;"/>
-  </action-attrs>
+  <action-method
+    name="action-invoice-line-domain-set-domain-analytic-distribution-template">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setAnalyticDistributionTemplateDomain"/>
+  </action-method>
 
-  <action-attrs name="action-invoice-line-attrs-domain-project">
-    <attribute name="domain" for="project"
-      expr="eval: &quot; self.clientPartner.id = ${__parent__?.partner.id} AND self.isBusinessProject = true &quot;"
-      if="__parent__?._model == 'com.axelor.apps.account.db.Invoice' &amp;&amp; (__parent__?.operationTypeSelect == 3 || __parent__?.operationTypeSelect == 4)"/>
-    <attribute name="domain" for="project"
-      expr="eval: &quot; self.isBusinessProject = true &quot;"
-      if="__parent__?._model == 'com.axelor.apps.account.db.Invoice' &amp;&amp; (__parent__?.operationTypeSelect == 1 || __parent__?.operationTypeSelect == 2)"/>
-    <attribute name="domain" for="project"
-      expr="eval: &quot; self.clientPartner.id = ${invoice.partner.id} AND self.isBusinessProject = true &quot;"
-      if="invoice != null &amp;&amp; (invoice.operationTypeSelect == 3 || invoice.operationTypeSelect == 4) &amp;&amp; __parent__?._model != 'com.axelor.apps.account.db.Invoice'"/>
-    <attribute name="domain" for="project"
-      expr="eval: &quot; self.isBusinessProject = true &quot;"
-      if="invoice != null &amp;&amp; (invoice.operationTypeSelect == 1 || invoice.operationTypeSelect == 2) &amp;&amp; __parent__?._model != 'com.axelor.apps.account.db.Invoice'"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-domain-project">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="setProjectDomain"/>
+  </action-method>
 
-  <action-attrs name="action-invoice-line-attrs-readonly-form">
-    <attribute name="readonly" for="titlePanel"
-      expr="eval: __parent__?.statusSelect &gt; 1"/>
-    <attribute name="readonly" for="informationsPanel"
-      expr="eval: __parent__?.statusSelect &gt; 1"/>
-    <attribute name="readonly" for="description"
-      expr="eval: __parent__?.statusSelect &gt; 1"/>
-    <attribute name="readonly" for="projectPanel"
-      expr="eval: __parent__?.statusSelect &gt; 1"/>
-    <attribute name="readonly" for="analyticDistributionPanel"
-      expr="eval: __parent__?.statusSelect &gt; 2"/>
-    <attribute name="readonly" for="accountingPanel"
-      expr="eval: __parent__?.statusSelect &gt; 2"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-readonly-form">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setFormFieldsToReadOnly"/>
+  </action-method>
 
   <!-- TODO : to test, when invoice lines menu entry will be available -->
   <action-attrs name="action-invoice-line-attrs-readonly-menu-form">
@@ -743,45 +699,28 @@
       expr="eval:invoice?.operationSubTypeSelect==2"/>
   </action-attrs>
 
-  <action-attrs name="action-invoice-line-attrs-set-product-domain-onselect">
-    <attribute name="domain" for="product"
-      expr="eval: &quot; self.isModel = false AND self.dtype = 'Product' AND self.sellable = true &quot;"
-      if="__parent__?.operationTypeSelect > 2"/>
-    <attribute name="domain" for="product"
-      expr="eval: &quot; self.isModel = false AND self.dtype = 'Product' AND self.purchasable = true &quot;"
-      if="__parent__?.operationTypeSelect &lt; 3"/>
-    <attribute name="domain"
-      expr="eval: &quot; self.isModel = false and self.id IN (SELECT product.id FROM SupplierCatalog WHERE supplierPartner.id = ${__parent__?.partner?.id}) AND purchasable = true &quot;"
-      for="product"
-      if="__parent__?.operationTypeSelect &lt; 3 &amp;&amp; __config__.app.isApp('purchase') &amp;&amp; __config__.app.getApp('purchase')?.getManageSupplierCatalog() &amp;&amp; isFilterOnSupplier"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-set-product-domain-onselect">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="setProductDomain"/>
+  </action-method>
 
   <action-attrs name="action-invoice-line-attrs-set-isFilterOnSupplier">
     <attribute name="value" for="$isFilterOnSupplier" expr="eval: true"/>
   </action-attrs>
 
-  <action-attrs name="action-invoice-line-attrs-display-different-language-message">
-    <attribute for="$differentLanguageMessage" name="hidden"
-      expr="eval: __parent__?.partner?.localization?.language?.code?.equals(__user__.getLanguage())"
-      if="__parent__"/>
-    <attribute for="$partnerLanguage" name="value"
-      expr="eval: __parent__?.partner?.localization?.language?.code?.toUpperCase()" if="__parent__"/>
-    <attribute for="$differentLanguageMessage" name="hidden"
-      expr="eval: invoice?.partner?.localization?.language?.code?.equals(__user__.getLanguage())"
-      if="invoice"/>
-    <attribute for="$partnerLanguage" name="value"
-      expr="eval: invoice?.partner?.localization?.language?.code?.toUpperCase()" if="invoice"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-display-different-language-message">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="displayDifferentLanguageMessage"/>
+  </action-method>
 
-  <action-attrs name="action-invoice-line-attrs-set-hidden-analytic-distribution-panel">
-    <attribute for="analyticDistributionPanel" name="hidden"
-      expr="eval: !__config__.app.getApp('account')?.getManageAnalyticAccounting() || !__parent__?.company?.accountConfig?.getManageAnalyticAccounting() || !account?.analyticDistributionAuthorized"/>
-  </action-attrs>
+  <action-method
+    name="action-invoice-line-method-set-hidden-analytic-distribution-panel">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setHiddenAnalyticDistributionPanel"/>
+  </action-method>
 
-  <action-attrs name="action-invoice-line-attrs-display-coefficient">
-    <attribute for="coefficient" name="hidden"
-      expr="eval: !__repo__(AccountConfig).findByCompany(__parent__.company)?.isInvoiceCoefficientEnabled"/>
-  </action-attrs>
+  <action-method name="action-invoice-line-method-display-coefficient">
+    <call class="com.axelor.apps.account.web.InvoiceLineController" method="displayCoefficient"/>
+  </action-method>
 
   <action-view name="action-invoice-line-view-project-tasks" title="Related tasks"
     model="com.axelor.apps.project.db.ProjectTask">
