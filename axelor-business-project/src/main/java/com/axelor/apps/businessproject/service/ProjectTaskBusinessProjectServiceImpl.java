@@ -20,6 +20,7 @@ package com.axelor.apps.businessproject.service;
 
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
+import com.axelor.apps.account.service.app.AppAccountService;
 import com.axelor.apps.account.service.invoice.generator.InvoiceLineGenerator;
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Company;
@@ -61,6 +62,7 @@ import com.axelor.common.ObjectUtils;
 import com.axelor.db.JPA;
 import com.axelor.db.Query;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.axelor.studio.db.AppBusinessProject;
 import com.axelor.utils.helpers.QueryBuilder;
 import com.google.common.base.Strings;
@@ -76,6 +78,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 
 public class ProjectTaskBusinessProjectServiceImpl extends ProjectTaskServiceImpl
@@ -267,15 +270,46 @@ public class ProjectTaskBusinessProjectServiceImpl extends ProjectTaskServiceImp
 
     List<InvoiceLine> invoiceLineList = new ArrayList<>();
     int count = 0;
-    for (ProjectTask projectTask : projectTaskList) {
-      invoiceLineList.addAll(this.createInvoiceLine(invoice, projectTask, priority * 100 + count));
+    int index = 1;
+    for (ProjectTask projectTask :
+        projectTaskList.stream()
+            .filter(task -> task.getParentTask() == null)
+            .collect(Collectors.toList())) {
+      invoiceLineList.add(
+          this.createInvoiceLine(
+              invoice, projectTask, priority * 100 + count, String.valueOf(index), null));
+      index++;
       count++;
     }
+    if (Beans.get(AppAccountService.class).getAppAccount().getActivateMultiLevelInvoiceLines()) {
+      {
+        for (InvoiceLine invoiceLine : invoiceLineList) {
+          invoice.addExpendableInvoiceLineListItem(invoiceLine);
+        }
+      }
+    }
+
     return invoiceLineList;
   }
 
+  protected void fillInvoiceLineList(
+      InvoiceLine invoiceLine, List<InvoiceLine> newInvoiceLineList) {
+    if (CollectionUtils.isEmpty(invoiceLine.getSubInvoiceLineList())) {
+      return;
+    }
+    for (InvoiceLine il : invoiceLine.getSubInvoiceLineList()) {
+      newInvoiceLineList.add(il);
+      fillInvoiceLineList(il, newInvoiceLineList);
+    }
+  }
+
   @Override
-  public List<InvoiceLine> createInvoiceLine(Invoice invoice, ProjectTask projectTask, int priority)
+  public InvoiceLine createInvoiceLine(
+      Invoice invoice,
+      ProjectTask projectTask,
+      int priority,
+      String index,
+      InvoiceLine parentInvoiceLine)
       throws AxelorException {
 
     InvoiceLineGenerator invoiceLineGenerator =
@@ -284,18 +318,18 @@ public class ProjectTaskBusinessProjectServiceImpl extends ProjectTaskServiceImp
             projectTask.getProduct(),
             projectTask.getName(),
             projectTask.getUnitPrice(),
-            BigDecimal.ZERO,
+            projectTask.getSaleOrderLine().getInTaxPrice(),
             projectTask.getPriceDiscounted(),
             projectTask.getDescription(),
             projectTask.getQuantity(),
             projectTask.getInvoicingUnit(),
-            null,
+            projectTask.getSaleOrderLine().getTaxLineSet(),
             priority,
             projectTask.getDiscountAmount(),
             projectTask.getDiscountTypeSelect(),
             projectTask.getExTaxTotal(),
-            BigDecimal.ZERO,
-            false) {
+            projectTask.getSaleOrderLine().getInTaxTotal(),
+            true) {
 
           @Override
           public List<InvoiceLine> creates() throws AxelorException {
@@ -305,8 +339,16 @@ public class ProjectTaskBusinessProjectServiceImpl extends ProjectTaskServiceImp
             invoiceLine.setSaleOrderLine(projectTask.getSaleOrderLine());
             invoiceLine.addProjectTaskSetItem(projectTask);
             projectTask.addInvoiceLineSetItem(invoiceLine);
+            invoiceLine.setInvoice(null);
+            invoiceLine.setInvoiceLineListSize(
+                projectTask.getSaleOrderLine().getSaleOrderLineListSize());
+
+            if (parentInvoiceLine != null) {
+              parentInvoiceLine.addSubInvoiceLineListItem(invoiceLine);
+            }
 
             setProgressAndCoefficient(invoiceLine, projectTask);
+            invoiceLine.setLineIndex(String.valueOf(index));
 
             List<InvoiceLine> invoiceLines = new ArrayList<InvoiceLine>();
             invoiceLines.add(invoiceLine);
@@ -315,7 +357,15 @@ public class ProjectTaskBusinessProjectServiceImpl extends ProjectTaskServiceImp
           }
         };
 
-    return invoiceLineGenerator.creates();
+    InvoiceLine invoiceLine = invoiceLineGenerator.creates().get(0);
+    int counter = 1;
+    for (ProjectTask childProjectTask : projectTask.getProjectTaskList()) {
+      String nextIndex = index + "." + counter;
+      createInvoiceLine(invoice, childProjectTask, priority++, nextIndex, invoiceLine);
+      counter++;
+    }
+
+    return invoiceLine;
   }
 
   protected void setProgressAndCoefficient(InvoiceLine invoiceLine, ProjectTask projectTask) {

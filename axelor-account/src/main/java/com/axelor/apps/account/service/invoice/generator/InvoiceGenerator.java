@@ -32,6 +32,7 @@ import com.axelor.apps.account.exception.AccountExceptionMessage;
 import com.axelor.apps.account.service.accountingsituation.AccountingSituationService;
 import com.axelor.apps.account.service.app.AppAccountService;
 import com.axelor.apps.account.service.config.AccountConfigService;
+import com.axelor.apps.account.service.invoice.InvoiceServiceDemo;
 import com.axelor.apps.account.service.invoice.InvoiceTermService;
 import com.axelor.apps.account.service.invoice.InvoiceToolService;
 import com.axelor.apps.account.service.invoice.generator.tax.TaxInvoiceLine;
@@ -356,12 +357,16 @@ public abstract class InvoiceGenerator {
     logger.debug("Populate an invoice => invoice lines : {} ", invoiceLines.size());
 
     initCollections(invoice);
-
-    if (invoice instanceof ContextEntity) {
-      invoice.getInvoiceLineList().addAll(invoiceLines);
+    if (!Beans.get(AppAccountService.class).getAppAccount().getActivateMultiLevelInvoiceLines()) {
+      if (invoice instanceof ContextEntity) {
+        invoice.getInvoiceLineList().addAll(invoiceLines);
+      } else {
+        invoiceLines.forEach(invoice::addInvoiceLineListItem);
+      }
     } else {
-      invoiceLines.forEach(invoice::addInvoiceLineListItem);
+      Beans.get(InvoiceServiceDemo.class).synchronizeInvoiceLineList(invoice);
     }
+
     // Create tax lines.
     List<InvoiceLineTax> invoiceTaxLines = (new TaxInvoiceLine(invoice, invoiceLines)).creates();
 

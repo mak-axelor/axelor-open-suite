@@ -4,14 +4,32 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_7.0.xsd">
 
   <grid name="invoice-line-grid" title="Invoice lines"
-    model="com.axelor.apps.account.db.InvoiceLine" expandable="true"
-    expandable-form-view="invoice-line-form-nested">
+    model="com.axelor.apps.account.db.InvoiceLine">
     <hilite strong="true" color="default" if="typeSelect != 0"/>
+    <field name="lineIndex"/>
     <field name="product.code" width="120"/>
     <field name="productName"/>
     <field name="qty" aggregate="sum" x-scale="$nbDecimalDigitForQty"/>
-    <field name="priceDiscounted" title="Unit price W.T."
-      x-scale="$nbDecimalDigitForUnitPrice"/>
+    <field name="price" title="Unit price W.T." x-scale="$nbDecimalDigitForUnitPrice"/>
+    <field name="inTaxPrice"/>
+    <field name="unit" form-view="unit-form" grid-view="unit-grid"/>
+    <field name="coefficient"/>
+    <field name="exTaxTotal" aggregate="sum"/>
+    <field name="inTaxTotal" aggregate="sum"/>
+    <field name="typeSelect" hidden="true"/>
+    <field name="$nbDecimalDigitForUnitPrice" hidden="true"/>
+    <field name="$nbDecimalDigitForQty" hidden="true"/>
+  </grid>
+
+  <grid name="invoice-line-multi-level-grid" title="Invoice lines"
+    model="com.axelor.apps.account.db.InvoiceLine" expandable="true"
+    expandable-form-view="invoice-line-form-nested">
+    <hilite strong="true" color="default" if="typeSelect != 0"/>
+    <field name="lineIndex"/>
+    <field name="product.code" width="120"/>
+    <field name="productName"/>
+    <field name="qty" aggregate="sum" x-scale="$nbDecimalDigitForQty"/>
+    <field name="price" title="Unit price W.T." x-scale="$nbDecimalDigitForUnitPrice"/>
     <field name="inTaxPrice"/>
     <field name="unit" form-view="unit-form" grid-view="unit-grid"/>
     <field name="coefficient"/>
@@ -56,30 +74,6 @@
     <field name="$nbDecimalDigitForQty" hidden="true"/>
   </grid>
 
-  <grid name="invoice-line-editable-grid" title="Invoice lines"
-    model="com.axelor.apps.account.db.InvoiceLine" editable="true" expandable="true"
-    expandable-form-view="invoice-line-form-nested">
-    <hilite strong="true" color="default" if="typeSelect != 0"/>
-    <field name="product" onChange="action-group-account-invoice-line-product-onchange"/>
-    <field name="product.code" width="120"/>
-    <field name="qty" x-scale="$nbDecimalDigitForQty"
-      onChange="action-group-account-invoice-line-qty-onchange"/>
-    <field name="price"
-      onChange="action-invoice-line-method-onchange-price,action-invoice-line-method-compute,action-invoice-line-method-compute-analytic-distribution"
-      x-scale="$nbDecimalDigitForUnitPrice"/>
-    <field name="inTaxPrice"/>
-    <field name="unit" form-view="unit-form" grid-view="unit-grid"/>
-    <field name="coefficient"/>
-    <field name="exTaxTotal" aggregate="sum"/>
-    <field name="inTaxTotal" aggregate="sum"/>
-    <field name="typeSelect" hidden="true"/>
-    <field name="$nbDecimalDigitForUnitPrice" hidden="true"/>
-    <field name="$nbDecimalDigitForQty" hidden="true"/>
-    <field name="priceBeforeUpdate" hidden="true"/>
-    <field name="qtyBeforeUpdate" hidden="true"/>
-  </grid>
-
-
   <form name="invoice-line-form" title="Invoice line"
     model="com.axelor.apps.account.db.InvoiceLine" width="large" readonlyIf="$isReadOnly"
     onNew="action-account-invoice-line-onnew-group"
@@ -105,6 +99,7 @@
           </viewer>
         </field>
         <panel name="customerInvoicePanel" colSpan="12">
+          <field name="lineIndex" readonly="true" colSpan="1"/>
           <field name="product" canEdit="false"
             onChange="action-group-account-invoice-line-product-onchange"
             onSelect="action-invoice-line-method-set-product-domain-onselect"
@@ -330,7 +325,7 @@
   <form name="invoice-line-form-nested" title="Invoice lines"
     model="com.axelor.apps.account.db.InvoiceLine">
     <panel-related field="subInvoiceLineList" colSpan="12"
-      form-view="invoice-line-form" grid-view="invoice-line-grid"
+      form-view="invoice-line-form" grid-view="invoice-line-multi-level-grid"
       x-expandable-form="invoice-line-form" x-expand-all="subInvoiceLineList" x-display-mode="tree"
       x-expandable="true" x-show-header="false"/>
 
@@ -350,6 +345,7 @@
     <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-method-set-scale"/>
     <action name="action-invoice-line-method-display-coefficient"/>
+    <action name="action-invoice-line-method-set-line-start-values"/>
   </action-group>
 
   <action-group name="action-group-account-invoice-line-onload">
@@ -716,6 +712,11 @@
     name="action-invoice-line-method-set-hidden-analytic-distribution-panel">
     <call class="com.axelor.apps.account.web.InvoiceLineController"
       method="setHiddenAnalyticDistributionPanel"/>
+  </action-method>
+
+  <action-method name="action-invoice-line-method-set-line-start-values">
+    <call class="com.axelor.apps.account.web.InvoiceLineController"
+      method="setInvoiceLineStartValues"/>
   </action-method>
 
   <action-method name="action-invoice-line-method-display-coefficient">

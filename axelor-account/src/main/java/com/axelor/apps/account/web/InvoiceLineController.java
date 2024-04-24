@@ -41,6 +41,7 @@ import com.axelor.apps.account.service.analytic.AnalyticMoveLineService;
 import com.axelor.apps.account.service.app.AppAccountService;
 import com.axelor.apps.account.service.invoice.InvoiceLineAnalyticService;
 import com.axelor.apps.account.service.invoice.InvoiceLineService;
+import com.axelor.apps.account.service.invoice.InvoiceServiceDemo;
 import com.axelor.apps.account.service.invoice.InvoiceToolService;
 import com.axelor.apps.account.translation.ITranslation;
 import com.axelor.apps.base.AxelorException;
@@ -823,5 +824,13 @@ public class InvoiceLineController {
         !Beans.get(AppAccount.class).getManageAnalyticAccounting()
             || invoice.getCompany().getAccountConfig().getManageAnalyticAccounting()
             || invoiceLine.getAccount().getAnalyticDistributionAuthorized());
+  }
+
+  public void setInvoiceLineStartValues(ActionRequest request, ActionResponse response) {
+
+    Context context = request.getContext();
+    InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
+    response.setValues(
+        Beans.get(InvoiceServiceDemo.class).setSOLineStartValues(invoiceLine, context));
   }
 }

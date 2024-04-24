@@ -41,11 +41,10 @@ import com.axelor.meta.schema.actions.ActionView.ActionViewBuilder;
 import com.axelor.utils.helpers.StringHelper;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import org.apache.commons.collections.CollectionUtils;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 
 public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
 
@@ -94,7 +93,6 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
           I18n.get(BusinessProjectExceptionMessage.SALE_ORDER_GENERATE_FILL_PROJECT_ERROR_1));
     }
 
-
     for (SaleOrderLine saleOrderLine : saleOrderLineList) {
       processSaleOrderLine(project, saleOrder, startDate, tasks, saleOrderLine);
     }
@@ -111,22 +109,22 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
       SaleOrderLine parentSaleOrderLine = saleOrderLine.getParentLine();
       if (parentSaleOrderLine != null) {
         ProjectTask parentProjectTask =
-                projectTaskRepo
-                        .all()
-                        .filter("self.saleOrderLine = :parentLine")
-                        .bind("parentLine", parentSaleOrderLine)
-                        .fetchOne();
+            projectTaskRepo
+                .all()
+                .filter("self.saleOrderLine = :parentLine")
+                .bind("parentLine", parentSaleOrderLine)
+                .fetchOne();
         task.setParentTask(parentProjectTask);
       }
       if (CollectionUtils.isNotEmpty(childrenSOLines)) {
         List<ProjectTask> childrenProjectTaskList =
-                projectTaskRepo
-                        .all()
-                        .filter(
-                                "self.saleOrderLine.id IN ("
-                                        + StringHelper.getIdListString(childrenSOLines)
-                                        + ")")
-                        .fetch();
+            projectTaskRepo
+                .all()
+                .filter(
+                    "self.saleOrderLine.id IN ("
+                        + StringHelper.getIdListString(childrenSOLines)
+                        + ")")
+                .fetch();
         childrenProjectTaskList.forEach(task::addProjectTaskListItem);
       }
     }
@@ -167,9 +165,9 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
     }
 
     List<SaleOrderLine> subSaleOrderLineList = saleOrderLine.getSubSaleOrderLineList();
-    if(CollectionUtils.isNotEmpty(subSaleOrderLineList)){
-      for(SaleOrderLine subSlo : subSaleOrderLineList){
-        processSaleOrderLine(project,saleOrder,startDate,tasks,subSlo);
+    if (CollectionUtils.isNotEmpty(subSaleOrderLineList)) {
+      for (SaleOrderLine subSlo : subSaleOrderLineList) {
+        processSaleOrderLine(project, saleOrder, startDate, tasks, subSlo);
       }
     }
   }

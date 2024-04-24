@@ -237,7 +237,6 @@ public class InvoicingProjectService {
     for (InvoiceLine invoiceLine : invoiceLineList) {
       invoiceLine.setSequence(sequence);
       sequence++;
-
       invoiceLineService.compute(invoice, invoiceLine);
     }
 

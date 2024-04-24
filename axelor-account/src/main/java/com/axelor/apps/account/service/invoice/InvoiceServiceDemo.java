@@ -28,6 +28,7 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.tax.TaxService;
 import com.axelor.common.ObjectUtils;
 import com.axelor.db.mapper.Mapper;
+import com.axelor.rpc.Context;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class InvoiceServiceDemo {
 
@@ -311,5 +313,42 @@ public class InvoiceServiceDemo {
             false, taxLineSet, exTaxPrice, appBaseService.getNbDecimalDigitForUnitPrice());
     invoiceLine.setInTaxPrice(inTaxPrice);
     invoiceLineService.compute(invoice, invoiceLine);
+  }
+
+  public String calculateParentInvoiceLineIndex(Invoice invoice) {
+    return invoice.getExpendableInvoiceLineList().stream()
+            .filter(il -> il.getLineIndex() != null)
+            .map(il -> il.getLineIndex().split("\\.")[0])
+            .mapToInt(Integer::parseInt)
+            .boxed()
+            .collect(Collectors.maxBy(Integer::compareTo))
+            .map(max -> String.valueOf(max + 1))
+            .orElse("1");
+  }
+
+  public InvoiceLine setSOLineStartValues(InvoiceLine invoiceLine, Context context) {
+    if (invoiceLine.getLineIndex() == null) {
+      Context parentContext = context.getParent();
+      if (parentContext != null && parentContext.getContextClass().equals(Invoice.class)) {
+        Invoice parent = parentContext.asType(Invoice.class);
+        if (parent.getExpendableInvoiceLineList() != null) {
+          invoiceLine.setLineIndex(calculateParentInvoiceLineIndex(parent));
+        } else {
+          invoiceLine.setLineIndex("1");
+        }
+      }
+
+      if (context.getParent() != null
+              && context.getParent().getContextClass().equals(InvoiceLine.class)) {
+        InvoiceLine parent = context.getParent().asType(InvoiceLine.class);
+        if(parent.getSubInvoiceLineList() != null){
+          invoiceLine.setLineIndex(
+                  parent.getLineIndex() + "." + (parent.getSubInvoiceLineList().size() + 1));
+        } else {
+          invoiceLine.setLineIndex(parent.getLineIndex() + ".1");
+        }
+      }
+    }
+    return invoiceLine;
   }
 }
