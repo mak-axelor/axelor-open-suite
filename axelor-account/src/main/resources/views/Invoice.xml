@@ -620,8 +620,7 @@
           onChange="action-invoice-group-invoice-line-list-on-change" canNew="statusSelect == 1"
           canRemove="statusSelect == 1" readonlyIf="statusSelect == 3 || partner == null"
           canMove="true" x-widget="CollectionTree" x-expend-all="expendableInvoiceLineList"
-          x-display-mode="tree" x-expandable="true"
-        />
+          x-display-mode="tree" x-expandable="true"/>
         <panel-related name="invoiceLineListPanel" field="invoiceLineList"
           canNew="statusSelect == 1" canRemove="statusSelect == 1"
           readonlyIf="statusSelect == 3 || partner == null" form-view="invoice-line-form"

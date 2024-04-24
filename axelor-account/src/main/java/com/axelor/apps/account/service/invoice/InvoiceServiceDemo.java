@@ -33,10 +33,12 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 
 public class InvoiceServiceDemo {
 
@@ -62,6 +64,9 @@ public class InvoiceServiceDemo {
   public List<InvoiceLine> updateRelatedLines(InvoiceLine dirtyLine, Invoice invoice)
       throws AxelorException {
     List<InvoiceLine> items = invoice.getExpendableInvoiceLineList();
+    if (CollectionUtils.isEmpty(items)) {
+      return items;
+    }
     updateChild(dirtyLine, invoice);
     replaceDirtyLineInItems(dirtyLine, items);
     updateParent(dirtyLine, items, invoice);
@@ -139,21 +144,25 @@ public class InvoiceServiceDemo {
       throws AxelorException {
     for (InvoiceLine invoiceLine : list) {
       if (isOrHasDirtyLine(invoiceLine, dirtyLine)) {
-        compute(invoiceLine, invoice);
+        compute(invoiceLine, invoice, invoiceLine.getLineIndex());
       }
     }
   }
 
-  protected void compute(InvoiceLine invoiceLine, Invoice invoice) throws AxelorException {
+  protected void compute(InvoiceLine invoiceLine, Invoice invoice, String parent)
+      throws AxelorException {
     List<InvoiceLine> items = invoiceLine.getSubInvoiceLineList();
     if (ObjectUtils.isEmpty(items)) {
       return;
     }
     BigDecimal quantity = invoiceLine.getQty();
     BigDecimal totalPrice = BigDecimal.ZERO;
+    int i = 1;
     for (InvoiceLine line : items) {
-      compute(line, invoice);
+      line.setLineIndex(parent + "." + i);
+      compute(line, invoice, parent + "." + i);
       totalPrice = totalPrice.add(line.getExTaxTotal());
+      i++;
     }
     totalPrice = quantity.equals(BigDecimal.ZERO) ? BigDecimal.ZERO : totalPrice;
     BigDecimal price =
@@ -163,7 +172,6 @@ public class InvoiceServiceDemo {
     invoiceLine.setPrice(price);
     invoiceLine.setExTaxTotal(totalPrice);
     computeAllValues(invoiceLine, invoice);
-    // setDefaultSaleOrderLineProperties(orderLine, order);
     invoiceLine.setPriceBeforeUpdate(invoiceLine.getPrice());
     invoiceLine.setQtyBeforeUpdate(invoiceLine.getQty());
   }
@@ -178,12 +186,6 @@ public class InvoiceServiceDemo {
     }
 
     List<InvoiceLine> items = invoiceLine.getSubInvoiceLineList();
-    /*    if (orderLine.getId() != null && items == null) {
-      List<SaleOrderLine> list = saleOrderRepository.find(orderLine.getId()).getExpendableSaleOrderLineList();
-      if (list != null) {
-        items = list;
-      }
-    }*/
 
     for (InvoiceLine line : items) {
       if (isOrHasDirtyLine(line, dirtyLine)) {
@@ -302,6 +304,7 @@ public class InvoiceServiceDemo {
     copy.clearSubInvoiceLineList();
     copy.setParentLine(null);
     copy.setRootInvoice(null);
+    copy.setParentCid(invoiceLine.getCid());
     invoice.addInvoiceLineListItem(copy);
   }
 
@@ -317,13 +320,13 @@ public class InvoiceServiceDemo {
 
   public String calculateParentInvoiceLineIndex(Invoice invoice) {
     return invoice.getExpendableInvoiceLineList().stream()
-            .filter(il -> il.getLineIndex() != null)
-            .map(il -> il.getLineIndex().split("\\.")[0])
-            .mapToInt(Integer::parseInt)
-            .boxed()
-            .collect(Collectors.maxBy(Integer::compareTo))
-            .map(max -> String.valueOf(max + 1))
-            .orElse("1");
+        .filter(il -> il.getLineIndex() != null)
+        .map(il -> il.getLineIndex().split("\\.")[0])
+        .mapToInt(Integer::parseInt)
+        .boxed()
+        .collect(Collectors.maxBy(Integer::compareTo))
+        .map(max -> String.valueOf(max + 1))
+        .orElse("1");
   }
 
   public InvoiceLine setSOLineStartValues(InvoiceLine invoiceLine, Context context) {
@@ -339,16 +342,37 @@ public class InvoiceServiceDemo {
       }
 
       if (context.getParent() != null
-              && context.getParent().getContextClass().equals(InvoiceLine.class)) {
+          && context.getParent().getContextClass().equals(InvoiceLine.class)) {
         InvoiceLine parent = context.getParent().asType(InvoiceLine.class);
-        if(parent.getSubInvoiceLineList() != null){
+        if (parent.getSubInvoiceLineList() != null) {
           invoiceLine.setLineIndex(
-                  parent.getLineIndex() + "." + (parent.getSubInvoiceLineList().size() + 1));
+              parent.getLineIndex() + "." + (parent.getSubInvoiceLineList().size() + 1));
         } else {
           invoiceLine.setLineIndex(parent.getLineIndex() + ".1");
         }
       }
     }
     return invoiceLine;
+  }
+
+  public void recalculateAllPrices(Context context, Invoice invoice) throws AxelorException {
+    int i = 1;
+    for (InvoiceLine invoiceLine : invoice.getExpendableInvoiceLineList()) {
+      invoiceLine.setLineIndex(String.valueOf(i));
+      compute(invoiceLine, invoice, String.valueOf(i));
+      i++;
+    }
+  }
+
+  public void removeLines(Invoice invoice) {
+    Set<Long> expendableSaleOrderLineCids = new HashSet<>();
+    for (InvoiceLine invoiceLine : invoice.getExpendableInvoiceLineList()) {
+      expendableSaleOrderLineCids.add(invoiceLine.getCid());
+    }
+    List<InvoiceLine> saleOrderLineList = invoice.getInvoiceLineList();
+    invoice.setInvoiceLineList(
+        saleOrderLineList.stream()
+            .filter(line -> expendableSaleOrderLineCids.contains(line.getParentCid()))
+            .collect(Collectors.toList()));
   }
 }

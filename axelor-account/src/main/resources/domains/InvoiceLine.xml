@@ -127,6 +127,7 @@
     <decimal name="priceBeforeUpdate" title="Price before update"/>
     <string name="lineIndex" title="Index" readonly="true"/>
     <integer name="invoiceLineListSize"/>
+    <long name="parentCid"/>
 
     <extra-code>
 		<![CDATA[

@@ -1311,12 +1311,16 @@ public class InvoiceController {
         invoiceService.findDirtyLine(
             (List<Map<String, Object>>) context.get("expendableInvoiceLineList"));
     if (dirtyLine == null) {
+      Beans.get(InvoiceServiceDemo.class).recalculateAllPrices(request.getContext(), invoice);
+      Beans.get(InvoiceServiceDemo.class).removeLines(invoice);
+      response.setValues(invoice);
       return;
     }
 
     invoiceService.updateRelatedLines(dirtyLine, invoice);
-
-    invoiceService.synchronizeInvoiceLineList(invoice);
+    if (Beans.get(AppAccountService.class).getAppAccount().getActivateMultiLevelInvoiceLines()) {
+      Beans.get(InvoiceServiceDemo.class).synchronizeInvoiceLineList(invoice);
+    }
 
     response.setValues(invoice);
   }
