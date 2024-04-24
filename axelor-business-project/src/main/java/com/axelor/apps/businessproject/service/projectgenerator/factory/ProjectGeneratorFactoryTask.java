@@ -41,6 +41,8 @@ import com.axelor.meta.schema.actions.ActionView.ActionViewBuilder;
 import com.axelor.utils.helpers.StringHelper;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import org.apache.commons.collections.CollectionUtils;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +94,7 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
           I18n.get(BusinessProjectExceptionMessage.SALE_ORDER_GENERATE_FILL_PROJECT_ERROR_1));
     }
 
+
     for (SaleOrderLine saleOrderLine : saleOrderLineList) {
       processSaleOrderLine(project, saleOrder, startDate, tasks, saleOrderLine);
     }
@@ -100,6 +103,32 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
       throw new AxelorException(
           TraceBackRepository.CATEGORY_NO_VALUE,
           I18n.get(BusinessProjectExceptionMessage.SALE_ORDER_GENERATE_FILL_PROJECT_ERROR_3));
+    }
+
+    for (ProjectTask task : tasks) {
+      SaleOrderLine saleOrderLine = task.getSaleOrderLine();
+      List<SaleOrderLine> childrenSOLines = saleOrderLine.getSubSaleOrderLineList();
+      SaleOrderLine parentSaleOrderLine = saleOrderLine.getParentLine();
+      if (parentSaleOrderLine != null) {
+        ProjectTask parentProjectTask =
+                projectTaskRepo
+                        .all()
+                        .filter("self.saleOrderLine = :parentLine")
+                        .bind("parentLine", parentSaleOrderLine)
+                        .fetchOne();
+        task.setParentTask(parentProjectTask);
+      }
+      if (CollectionUtils.isNotEmpty(childrenSOLines)) {
+        List<ProjectTask> childrenProjectTaskList =
+                projectTaskRepo
+                        .all()
+                        .filter(
+                                "self.saleOrderLine.id IN ("
+                                        + StringHelper.getIdListString(childrenSOLines)
+                                        + ")")
+                        .fetch();
+        childrenProjectTaskList.forEach(task::addProjectTaskListItem);
+      }
     }
 
     return ActionView.define(String.format("Task%s generated", (tasks.size() > 1 ? "s" : "")))
@@ -135,6 +164,13 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
               });
     } else {
       tasks.add(createProjectTask(project, saleOrder, startDate, saleOrderLine));
+    }
+
+    List<SaleOrderLine> subSaleOrderLineList = saleOrderLine.getSubSaleOrderLineList();
+    if(CollectionUtils.isNotEmpty(subSaleOrderLineList)){
+      for(SaleOrderLine subSlo : subSaleOrderLineList){
+        processSaleOrderLine(project,saleOrder,startDate,tasks,subSlo);
+      }
     }
   }
 
@@ -193,7 +229,7 @@ public class ProjectGeneratorFactoryTask implements ProjectGeneratorFactory {
   protected List<SaleOrderLine> filterSaleOrderLinesForTasks(SaleOrder saleOrder)
       throws AxelorException {
     List<SaleOrderLine> saleOrderLineList = new ArrayList<>();
-    for (SaleOrderLine saleOrderLine : saleOrder.getSaleOrderLineList()) {
+    for (SaleOrderLine saleOrderLine : saleOrder.getExpendableSaleOrderLineList()) {
       Product product = saleOrderLine.getProduct();
       if (product != null
           && ProductRepository.PRODUCT_TYPE_SERVICE.equals(
