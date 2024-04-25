@@ -378,6 +378,7 @@
     <action name="action-invoice-line-method-set-hidden-analytic-distribution-panel"/>
     <action name="action-invoice-line-method-set-scale"/>
     <action name="action-invoice-line-record-update-old-price-and-qty"/>
+    <action name="action-invoice-line-method-creat-related-il-for-sub-products"/>
   </action-group>
 
   <action-record name="action-invoice-line-record-update-old-price-and-qty"
@@ -722,6 +723,13 @@
   <action-method name="action-invoice-line-method-display-coefficient">
     <call class="com.axelor.apps.account.web.InvoiceLineController" method="displayCoefficient"/>
   </action-method>
+
+  <action-method
+          name="action-invoice-line-method-creat-related-il-for-sub-products">
+    <call class="com.axelor.apps.businessproject.web.InvoiceController"
+          method="createInvoiceLinesForSubProducts"/>
+  </action-method>
+
 
   <action-view name="action-invoice-line-view-project-tasks" title="Related tasks"
     model="com.axelor.apps.project.db.ProjectTask">

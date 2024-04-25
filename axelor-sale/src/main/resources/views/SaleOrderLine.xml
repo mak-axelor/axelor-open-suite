@@ -718,6 +718,7 @@
     <action name="action-sale-order-line-method-fill-max-discount"/>
     <action name="action-sale-order-line-method-translate-product-description-and-name"/>
     <action name="action-sale-order-line-record-update-old-price-and-qty"/>
+    <action name="action-sale-order-line-method-creat-related-slo-for-sub-products"/>
   </action-group>
 
   <action-group name="action-group-sale-saleorderline-qty-onchange">
@@ -769,6 +770,12 @@
   </action-group>
 
   <!-- ACTION RECORD -->
+
+  <action-method
+          name="action-sale-order-line-method-creat-related-slo-for-sub-products">
+    <call class="com.axelor.apps.sale.web.SaleOrderLineController"
+          method="createLinesForSubProducts"/>
+  </action-method>
 
   <action-record name="action-sale-order-line-record-update-old-price-and-qty"
     model="com.axelor.apps.sale.db.SaleOrderLine">

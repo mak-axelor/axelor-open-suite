@@ -523,6 +523,10 @@
           <field name="countryOfOrigin" showIf="usedInDEB"/>
         </panel>
       </panel>
+      <panel name="structuresPanel" title="Structures">
+        <panel-related field="subProductList" grid-view="sub-product-grid"
+          form-view="sub-product-form" colSpan="12" title="Children"/>
+      </panel>
     </panel-tabs>
     <panel name="attrsPanel">
       <field name="attrs" colSpan="12"/>

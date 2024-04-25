@@ -19,13 +19,21 @@
 package com.axelor.apps.businessproject.service;
 
 import com.axelor.apps.account.db.AnalyticMoveLine;
+import com.axelor.apps.account.db.FiscalPosition;
+import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
+import com.axelor.apps.account.db.TaxLine;
 import com.axelor.apps.account.db.repo.InvoiceLineRepository;
 import com.axelor.apps.account.service.AccountManagementAccountService;
 import com.axelor.apps.account.service.app.AppAccountService;
 import com.axelor.apps.account.service.config.AccountConfigService;
 import com.axelor.apps.account.service.invoice.InvoiceLineAnalyticService;
+import com.axelor.apps.account.service.invoice.InvoiceToolService;
 import com.axelor.apps.account.service.invoice.attributes.InvoiceLineAttrsService;
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.db.Company;
+import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.SubProduct;
 import com.axelor.apps.base.service.CurrencyScaleService;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.InternationalService;
@@ -36,9 +44,11 @@ import com.axelor.apps.base.service.tax.TaxService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.purchase.service.SupplierCatalogService;
 import com.axelor.apps.supplychain.service.InvoiceLineSupplychainService;
+import com.axelor.studio.db.AppInvoice;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.util.List;
+import java.util.Set;
 
 public class InvoiceLineProjectServiceImpl extends InvoiceLineSupplychainService
     implements InvoiceLineProjectService {
@@ -111,5 +121,72 @@ public class InvoiceLineProjectServiceImpl extends InvoiceLineSupplychainService
       analyticMoveLine.setProject(invoiceLine.getProject());
     }
     return analyticMoveLines;
+  }
+
+  @Override
+  public InvoiceLine createInvoiceLinesRelatedToSubProducts(
+      InvoiceLine invoiceLine, Invoice invoice) throws AxelorException {
+    if (invoiceLine.getProduct() == null) {
+      return invoiceLine;
+    }
+    Set<SubProduct> productList = invoiceLine.getProduct().getSubProductList();
+    if (productList == null || productList.isEmpty()) {
+      return invoiceLine;
+    }
+    for (SubProduct subProduct : productList) {
+      InvoiceLine relatedInvoiceLine = createInvoiceLineRelatedToSubProduct(subProduct, invoice);
+      invoiceLine.addSubInvoiceLineListItem(relatedInvoiceLine);
+      invoiceLine.setInvoiceLineListSize(invoiceLine.getSubInvoiceLineList().size());
+      relatedInvoiceLine.setLineIndex(
+          invoiceLine.getLineIndex() + "." + (invoiceLine.getInvoiceLineListSize()));
+      createInvoiceLinesRelatedToSubProducts(relatedInvoiceLine, invoice);
+    }
+    return invoiceLine;
+  }
+
+  public InvoiceLine createInvoiceLineRelatedToSubProduct(SubProduct subProduct, Invoice invoice)
+      throws AxelorException {
+    InvoiceLine invoiceLine = new InvoiceLine();
+    invoiceLine.setProduct(subProduct.getProduct());
+    invoiceLine.setQty(subProduct.getQty());
+
+    boolean isPurchase = InvoiceToolService.isPurchase(invoice);
+    Product product = subProduct.getProduct();
+    Set<TaxLine> taxLineSet = null;
+    Company company = invoice.getCompany();
+    FiscalPosition fiscalPosition = invoice.getFiscalPosition();
+
+    taxLineSet = this.getTaxLineSet(invoice, invoiceLine, isPurchase);
+    invoiceLine.setTaxLineSet(taxLineSet);
+    invoiceLine.setTaxRate(taxService.getTotalTaxRateInPercentage(taxLineSet));
+    invoiceLine.setTaxCode(taxService.computeTaxCode(taxLineSet));
+
+    invoiceLine.setTaxEquivSet(
+        accountManagementAccountService.getProductTaxEquivSet(
+            product, company, fiscalPosition, isPurchase));
+    invoiceLine.setAccount(
+        accountManagementAccountService.getProductAccount(
+            product, company, fiscalPosition, isPurchase, invoiceLine.getFixedAssets()));
+
+    invoiceLine.setPrice(this.getExTaxUnitPrice(invoice, invoiceLine, taxLineSet, isPurchase));
+    invoiceLine.setInTaxPrice(this.getInTaxUnitPrice(invoice, invoiceLine, taxLineSet, isPurchase));
+
+    invoiceLine.setProductName(product.getName());
+    invoiceLine.setProductCode(product.getCode());
+    invoiceLine.setUnit(this.getUnit(product, isPurchase));
+
+    AppInvoice appInvoice = appAccountService.getAppInvoice();
+    Boolean isEnabledProductDescriptionCopy =
+        isPurchase
+            ? appInvoice.getIsEnabledProductDescriptionCopyForSuppliers()
+            : appInvoice.getIsEnabledProductDescriptionCopyForCustomers();
+
+    if (isEnabledProductDescriptionCopy) {
+      invoiceLine.setDescription(product.getDescription());
+    }
+
+    this.compute(invoice, invoiceLine);
+
+    return invoiceLine;
   }
 }
