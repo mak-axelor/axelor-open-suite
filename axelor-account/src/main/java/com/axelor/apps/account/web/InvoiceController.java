@@ -1324,14 +1324,4 @@ public class InvoiceController {
 
     response.setValues(invoice);
   }
-
-  public void setInvoiceLineStartValues(ActionRequest request, ActionResponse response) {
-
-    Context context = request.getContext();
-    Invoice invoice = context.getParent().asType(Invoice.class);
-    InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
-    invoiceLine.setLineIndex(
-        Beans.get(InvoiceServiceDemo.class).calculateParentInvoiceLineIndex(invoice));
-    response.setValues(invoiceLine);
-  }
 }
