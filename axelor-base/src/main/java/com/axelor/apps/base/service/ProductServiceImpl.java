@@ -29,6 +29,7 @@ import com.axelor.apps.base.db.ProductVariantAttr;
 import com.axelor.apps.base.db.ProductVariantConfig;
 import com.axelor.apps.base.db.ProductVariantValue;
 import com.axelor.apps.base.db.Sequence;
+import com.axelor.apps.base.db.SubProduct;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.db.repo.ProductVariantRepository;
@@ -46,8 +47,10 @@ import com.google.inject.persist.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class ProductServiceImpl implements ProductService {
@@ -564,5 +567,21 @@ public class ProductServiceImpl implements ProductService {
     copy.setProductCompanyList(null);
     copy.setLastPurchaseDate(null);
     copy.setCode(null);
+  }
+
+  @Override
+  public void setSubProducts(Product product) {
+    if (product.getSubProductList() == null) {
+      product.setSubProductList(new HashSet<>());
+    }
+
+    for (SubProduct subProduct : product.getSubProductList()) {
+      if (CollectionUtils.isNotEmpty(subProduct.getSubProductList())) {
+        for (SubProduct sbp : subProduct.getSubProductList()) {
+          subProduct.getProduct().addSubProductListItem(sbp);
+        }
+        setSubProducts(subProduct.getProduct());
+      }
+    }
   }
 }
