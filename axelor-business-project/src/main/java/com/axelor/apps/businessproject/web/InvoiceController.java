@@ -21,7 +21,6 @@ package com.axelor.apps.businessproject.web;
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
-import com.axelor.apps.account.service.invoice.InvoiceServiceDemo;
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.businessproject.service.InvoiceLineProjectService;
@@ -49,7 +48,6 @@ public class InvoiceController {
     return getInvoice(parentContext);
   }
 
-
   public void updateLines(ActionRequest request, ActionResponse response) throws AxelorException {
     try {
       Invoice invoice = request.getContext().asType(Invoice.class);
@@ -62,13 +60,13 @@ public class InvoiceController {
   }
 
   public void createInvoiceLinesForSubProducts(ActionRequest request, ActionResponse response)
-          throws AxelorException {
+      throws AxelorException {
     Context context = request.getContext();
     InvoiceLine invoiceLine = context.asType(InvoiceLine.class);
     Invoice invoice = this.getInvoice(context);
     invoiceLine =
-            Beans.get(InvoiceLineProjectService.class)
-                    .createInvoiceLinesRelatedToSubProducts(invoiceLine, invoice);
+        Beans.get(InvoiceLineProjectService.class)
+            .createInvoiceLinesRelatedToSubProducts(invoiceLine, invoice);
     response.setValues(invoiceLine);
   }
 }

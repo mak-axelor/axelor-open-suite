@@ -19,5 +19,5 @@ public interface MultiLevelSaleOrderLineService {
   void recalculateAllPrices(Context context, SaleOrder saleOrder) throws AxelorException;
 
   SaleOrderLine createLinesForSubProducts(SaleOrderLine saleOrderLine, SaleOrder saleOrder)
-          throws AxelorException;
+      throws AxelorException;
 }

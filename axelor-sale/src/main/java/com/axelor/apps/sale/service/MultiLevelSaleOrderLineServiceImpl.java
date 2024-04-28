@@ -333,7 +333,7 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
   }
 
   public SaleOrderLine createSaleOrderline(SubProduct subProduct, SaleOrder saleOrder)
-          throws AxelorException {
+      throws AxelorException {
     SaleOrderLine saleOrderLine = new SaleOrderLine();
     saleOrderLine.setProduct(subProduct.getProduct());
     saleOrderLine.setQty(subProduct.getQty());
@@ -347,7 +347,7 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
 
   @Override
   public SaleOrderLine createLinesForSubProducts(SaleOrderLine saleOrderLine, SaleOrder saleOrder)
-          throws AxelorException {
+      throws AxelorException {
     Set<SubProduct> productList = saleOrderLine.getProduct().getSubProductList();
     if (productList == null || productList.isEmpty()) {
       return saleOrderLine;
@@ -357,7 +357,7 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
       saleOrderLine.addSubSaleOrderLineListItem(relatedSaleOrderLine);
       saleOrderLine.setSaleOrderLineListSize(saleOrderLine.getSubSaleOrderLineList().size());
       relatedSaleOrderLine.setLineIndex(
-              saleOrderLine.getLineIndex() + "." + (saleOrderLine.getSaleOrderLineListSize()));
+          saleOrderLine.getLineIndex() + "." + (saleOrderLine.getSaleOrderLineListSize()));
       createLinesForSubProducts(relatedSaleOrderLine, saleOrder);
     }
     return saleOrderLine;

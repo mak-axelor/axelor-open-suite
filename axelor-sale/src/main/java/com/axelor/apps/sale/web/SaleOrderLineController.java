@@ -468,13 +468,13 @@ public class SaleOrderLineController {
   }
 
   public void createLinesForSubProducts(ActionRequest request, ActionResponse response)
-          throws AxelorException {
+      throws AxelorException {
     Context context = request.getContext();
     SaleOrderLine saleOrderLine = context.asType(SaleOrderLine.class);
     SaleOrder saleOrder = Beans.get(SaleOrderLineService.class).getSaleOrder(context);
     saleOrderLine =
-            Beans.get(MultiLevelSaleOrderLineService.class)
-                    .createLinesForSubProducts(saleOrderLine, saleOrder);
+        Beans.get(MultiLevelSaleOrderLineService.class)
+            .createLinesForSubProducts(saleOrderLine, saleOrder);
     response.setValues(saleOrderLine);
   }
 }

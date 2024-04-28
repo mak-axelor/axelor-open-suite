@@ -724,10 +724,9 @@
     <call class="com.axelor.apps.account.web.InvoiceLineController" method="displayCoefficient"/>
   </action-method>
 
-  <action-method
-          name="action-invoice-line-method-creat-related-il-for-sub-products">
+  <action-method name="action-invoice-line-method-creat-related-il-for-sub-products">
     <call class="com.axelor.apps.businessproject.web.InvoiceController"
-          method="createInvoiceLinesForSubProducts"/>
+      method="createInvoiceLinesForSubProducts"/>
   </action-method>
 
 
