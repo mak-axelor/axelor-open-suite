@@ -93,7 +93,6 @@ public class InvoiceServiceDemo {
     updatePrice(invoiceLine, priceCoef);
     invoiceLine.setExTaxTotal(invoiceLine.getQty().multiply(invoiceLine.getPrice()));
     computeAllValues(invoiceLine, invoice);
-    // setDefaultSaleOrderLineProperties(orderLine, order);
     invoiceLine.setPriceBeforeUpdate(invoiceLine.getPrice());
     invoiceLine.setQtyBeforeUpdate(invoiceLine.getQty());
     List<InvoiceLine> items = invoiceLine.getSubInvoiceLineList();
@@ -128,6 +127,8 @@ public class InvoiceServiceDemo {
     int i = 0;
     for (InvoiceLine invoiceLine : items) {
       if (isEqual(invoiceLine, dirtyLine)) {
+        invoiceLine.setPriceBeforeUpdate(invoiceLine.getPrice());
+        invoiceLine.setQtyBeforeUpdate(invoiceLine.getQty());
         items.set(i, dirtyLine);
         return true;
       }
@@ -234,12 +235,6 @@ public class InvoiceServiceDemo {
   @SuppressWarnings("unchecked")
   protected InvoiceLine getDirtyLine(Map<String, Object> orderLine) {
     InvoiceLine bean = Mapper.toBean(InvoiceLine.class, orderLine);
-    if (orderLine.get("_original") != null) {
-      InvoiceLine oldValue =
-          Mapper.toBean(InvoiceLine.class, (Map<String, Object>) orderLine.get("_original"));
-      bean.setQtyBeforeUpdate(oldValue.getQty());
-      bean.setPriceBeforeUpdate(oldValue.getPrice());
-    }
     if (bean.getId() != null && bean.getSubInvoiceLineList() == null) {
       InvoiceLine line2 = invoiceLineRepository.find(bean.getId());
       bean.setSubInvoiceLineList(line2.getSubInvoiceLineList());

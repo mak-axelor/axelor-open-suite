@@ -24,6 +24,7 @@ import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.account.service.config.AccountConfigService;
 import com.axelor.apps.account.service.invoice.InvoiceLineService;
+import com.axelor.apps.account.service.invoice.InvoiceService;
 import com.axelor.apps.account.service.invoice.generator.InvoiceGenerator;
 import com.axelor.apps.account.service.invoice.generator.InvoiceLineGenerator;
 import com.axelor.apps.account.service.invoice.print.InvoicePrintServiceImpl;
@@ -110,6 +111,8 @@ public class InvoicingProjectService {
 
   @Inject protected ProjectHoldBackLineService projectHoldBackLineService;
 
+  @Inject protected InvoiceService invoiceService;
+
   protected int MAX_LEVEL_OF_PROJECT = 10;
 
   protected int sequence = 0;
@@ -193,9 +196,9 @@ public class InvoicingProjectService {
     invoice.setDisplayExpenseOnPrinting(accountConfig.getDisplayExpenseOnPrinting());
 
     invoiceGenerator.populate(invoice, this.populate(invoice, invoicingProject));
-    invoice = projectHoldBackLineService.generateInvoiceLinesForHoldBacks(invoice);
+    projectHoldBackLineService.generateInvoiceLinesForHoldBacks(invoice);
+    invoiceGenerator.computeInvoice(invoice);
     Beans.get(InvoiceRepository.class).save(invoice);
-
     invoicingProject.setInvoice(invoice);
     invoicingProject.setStatusSelect(InvoicingProjectRepository.STATUS_GENERATED);
     invoicingProjectRepo.save(invoicingProject);

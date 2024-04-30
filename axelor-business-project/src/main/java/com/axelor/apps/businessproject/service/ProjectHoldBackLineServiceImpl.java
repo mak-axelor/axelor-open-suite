@@ -2,14 +2,17 @@ package com.axelor.apps.businessproject.service;
 
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
+import com.axelor.apps.account.service.app.AppAccountService;
 import com.axelor.apps.account.service.invoice.generator.InvoiceLineGenerator;
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.project.db.ProjectHoldBackLine;
+import com.axelor.inject.Beans;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 
 public class ProjectHoldBackLineServiceImpl implements ProjectHoldBackLineService {
 
@@ -24,6 +27,12 @@ public class ProjectHoldBackLineServiceImpl implements ProjectHoldBackLineServic
     List<InvoiceLine> invoiceLineList =
         createInvoiceLines(invoice, projectHoldBackLineList, invoice.getInvoiceLineList().size());
     invoice.getInvoiceLineList().addAll(invoiceLineList);
+    if (Beans.get(AppAccountService.class).getAppAccount().getActivateMultiLevelInvoiceLines()
+        && !CollectionUtils.isEmpty(invoiceLineList)) {
+      for (InvoiceLine il : invoiceLineList) {
+        invoice.addExpendableInvoiceLineListItem(il);
+      }
+    }
     return invoice;
   }
 
@@ -53,8 +62,8 @@ public class ProjectHoldBackLineServiceImpl implements ProjectHoldBackLineServic
             projectHoldBackLine.getProjectHoldBack().getProjectHoldBackProduct(),
             projectHoldBackLine.getProjectHoldBack().getName(),
             price,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
+            price,
+            price,
             null,
             BigDecimal.ONE,
             projectHoldBackLine.getProjectHoldBack().getProjectHoldBackProduct().getUnit(),
@@ -63,14 +72,14 @@ public class ProjectHoldBackLineServiceImpl implements ProjectHoldBackLineServic
             BigDecimal.ZERO,
             0,
             price,
-            BigDecimal.ZERO,
+            price,
             false) {
 
           @Override
           public List<InvoiceLine> creates() throws AxelorException {
 
             InvoiceLine invoiceLine = this.createInvoiceLine();
-
+            invoiceLine.setLineIndex("RT");
             List<InvoiceLine> invoiceLines = new ArrayList<>();
             invoiceLines.add(invoiceLine);
 

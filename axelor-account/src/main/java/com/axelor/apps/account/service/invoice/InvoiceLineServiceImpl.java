@@ -438,6 +438,8 @@ public class InvoiceLineServiceImpl implements InvoiceLineService {
     if (isEnabledProductDescriptionCopy) {
       productInformation.put("description", product.getDescription());
     }
+    invoiceLine.setPriceBeforeUpdate(invoiceLine.getPrice());
+    invoiceLine.setQtyBeforeUpdate(invoiceLine.getQty());
 
     return productInformation;
   }

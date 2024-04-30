@@ -31,6 +31,7 @@ import com.axelor.apps.budget.service.saleorder.SaleOrderLineBudgetService;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.SaleOrderLine;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
+import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
 import com.axelor.auth.AuthUtils;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
@@ -44,11 +45,7 @@ public class SaleOrderLineController {
       SaleOrderLine saleOrderLine = request.getContext().asType(SaleOrderLine.class);
       SaleOrder saleOrder;
 
-      if (SaleOrder.class.equals(request.getContext().getParent().getContextClass())) {
-        saleOrder = request.getContext().getParent().asType(SaleOrder.class);
-      } else {
-        saleOrder = saleOrderLine.getSaleOrder();
-      }
+      saleOrder = Beans.get(SaleOrderLineService.class).getSaleOrder(request.getContext());
 
       if (saleOrderLine.getProduct() == null) {
         response.setValue("account", null);
@@ -93,7 +90,8 @@ public class SaleOrderLineController {
 
   public void setAccountDomain(ActionRequest request, ActionResponse response) {
     try {
-      SaleOrder saleOrder = request.getContext().getParent().asType(SaleOrder.class);
+      SaleOrder saleOrder =
+          Beans.get(SaleOrderLineService.class).getSaleOrder(request.getContext());
       String query =
           "self.accountType.technicalTypeSelect IN ('"
               + AccountTypeRepository.TYPE_INCOME
@@ -130,11 +128,7 @@ public class SaleOrderLineController {
             Beans.get(SaleOrderRepository.class)
                 .find(Long.valueOf((Integer) request.getContext().get("_parentId")));
       } else {
-        if (SaleOrder.class.equals(request.getContext().getParent().getContextClass())) {
-          saleOrder = request.getContext().getParent().asType(SaleOrder.class);
-        } else {
-          saleOrder = request.getContext().asType(SaleOrderLine.class).getSaleOrder();
-        }
+        saleOrder = Beans.get(SaleOrderLineService.class).getSaleOrder(request.getContext());
       }
 
       if (saleOrder != null && saleOrder.getCompany() != null) {
@@ -161,7 +155,7 @@ public class SaleOrderLineController {
   public void setBudgetDomain(ActionRequest request, ActionResponse response)
       throws AxelorException {
     SaleOrderLine saleOrderLine = request.getContext().asType(SaleOrderLine.class);
-    SaleOrder saleOrder = request.getContext().getParent().asType(SaleOrder.class);
+    SaleOrder saleOrder = Beans.get(SaleOrderLineService.class).getSaleOrder(request.getContext());
     String query = "self.id = 0";
 
     if (saleOrder != null && saleOrder.getCompany() != null) {
@@ -177,6 +171,7 @@ public class SaleOrderLineController {
     if (saleOrder == null && request.getContext().getParent() != null) {
       saleOrder = request.getContext().getParent().asType(SaleOrder.class);
     }
+    saleOrder = Beans.get(SaleOrderLineService.class).getSaleOrder(request.getContext());
 
     Beans.get(SaleOrderLineBudgetService.class)
         .computeBudgetDistributionSumAmount(saleOrderLine, saleOrder);

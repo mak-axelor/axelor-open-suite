@@ -140,6 +140,8 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
     int i = 0;
     for (SaleOrderLine saleOrderLine : subSaleOrderLineList) {
       if (isEqual(saleOrderLine, dirtyLine)) {
+        dirtyLine.setQtyBeforeUpdate(dirtyLine.getQty());
+        dirtyLine.setPriceBeforeUpdate(dirtyLine.getPrice());
         subSaleOrderLineList.set(i, dirtyLine);
         return true;
       }
@@ -249,12 +251,7 @@ public class MultiLevelSaleOrderLineServiceImpl implements MultiLevelSaleOrderLi
   @SuppressWarnings("unchecked")
   protected SaleOrderLine getDirtyLine(Map<String, Object> saleOrderLine) {
     SaleOrderLine bean = Mapper.toBean(SaleOrderLine.class, saleOrderLine);
-    if (saleOrderLine.get("_original") != null) {
-      SaleOrderLine oldValue =
-          Mapper.toBean(SaleOrderLine.class, (Map<String, Object>) saleOrderLine.get("_original"));
-      bean.setQtyBeforeUpdate(oldValue.getQty());
-      bean.setPriceBeforeUpdate(oldValue.getPrice());
-    }
+
     if (bean.getId() != null && bean.getSubSaleOrderLineList() == null) {
       SaleOrderLine line2 = saleOrderLineRepository.find(bean.getId());
       bean.setSubSaleOrderLineList(line2.getSubSaleOrderLineList());

@@ -144,6 +144,8 @@ public class SaleOrderLineServiceImpl implements SaleOrderLineService {
     saleOrderLine.setTypeSelect(SaleOrderLineRepository.TYPE_NORMAL);
     fillPrice(saleOrderLine, saleOrder);
     fillComplementaryProductList(saleOrderLine);
+    saleOrderLine.setQtyBeforeUpdate(saleOrderLine.getQty());
+    saleOrderLine.setPriceBeforeUpdate(saleOrderLine.getPrice());
   }
 
   @Override

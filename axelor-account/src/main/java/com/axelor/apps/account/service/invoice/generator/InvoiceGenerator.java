@@ -376,8 +376,6 @@ public abstract class InvoiceGenerator {
     } else {
       invoiceTaxLines.forEach(invoice::addInvoiceLineTaxListItem);
     }
-
-    computeInvoice(invoice);
   }
 
   /**

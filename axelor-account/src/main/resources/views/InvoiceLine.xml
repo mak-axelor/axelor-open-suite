@@ -30,7 +30,6 @@
     <field name="productName"/>
     <field name="qty" aggregate="sum" x-scale="$nbDecimalDigitForQty"/>
     <field name="price" title="Unit price W.T." x-scale="$nbDecimalDigitForUnitPrice"/>
-    <field name="inTaxPrice"/>
     <field name="unit" form-view="unit-form" grid-view="unit-grid"/>
     <field name="coefficient"/>
     <field name="exTaxTotal" aggregate="sum"/>

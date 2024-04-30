@@ -55,7 +55,8 @@
   </grid>
 
   <form name="sale-order-line-form-nested" title="SO lines"
-    model="com.axelor.apps.sale.db.SaleOrderLine" onNew="action-sale-order-line-attrs-set-price-read-only"
+    model="com.axelor.apps.sale.db.SaleOrderLine"
+    onNew="action-sale-order-line-attrs-set-price-read-only"
     onLoad="action-sale-order-line-attrs-set-price-read-only">
     <panel-related field="subSaleOrderLineList" colSpan="12"
       form-view="sale-order-line-form" grid-view="sale-order-line-simple-editable-grid"
@@ -147,6 +148,8 @@
     <field name="parentSaleOrderLine" hidden="true"/>
     <field name="saleOrderLineListSize" hidden="true"/>
     <field name="typeSelect" hidden="true"/>
+    <field name="priceBeforeUpdate" hidden="true"/>
+    <field name="qtyBeforeUpdate" hidden="true"/>
   </grid>
 
   <grid name="sale-order-line-menu-grid" title="SO lines"
@@ -312,6 +315,8 @@
             readonlyIf="$isReadOnly !== false || deliveryState == 3"
             onChange="action-sale-order-line-method-onchange-intaxprice,action-sale-order-line-method-compute,action-sale-order-line-method-compute-analytic-distribution"
             hidden="true"/>
+          <field name="priceBeforeUpdate" hidden="true"/>
+          <field name="qtyBeforeUpdate" hidden="true"/>
           <panel name="discountPanel" colSpan="12"
             readonlyIf="$isReadOnly !== false || deliveryState == 3">
             <field name="discountTypeSelect" colSpan="3" readonlyIf="$nonNegotiable"
@@ -474,7 +479,7 @@
         <field name="invoicingModeSelect" title="Invoicing mode" colSpan="3"
           if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.getApp('business-project').getProjectSaleOrderLines()"
           if-module="axelor-business-project" showIf="toInvoice"
-          onChange="action-sale-order-line-validate-check-coefficient-config"/>
+          onChange="action-sale-order-line-method-check-coefficient-config"/>
         <panel-dashlet name="projectTaskListPanel" title="Related tasks"
           action="action-sale-order-line-view-project-tasks" colSpan="12"/>
       </panel>
@@ -719,7 +724,6 @@
     <action name="action-sale-order-line-record-complementary-products-to-handle"/>
     <action name="action-sale-order-line-method-fill-max-discount"/>
     <action name="action-sale-order-line-method-translate-product-description-and-name"/>
-    <action name="action-sale-order-line-record-update-old-price-and-qty"/>
     <action name="action-sale-order-line-method-creat-related-slo-for-sub-products"/>
   </action-group>
 
@@ -779,10 +783,10 @@
       method="createLinesForSubProducts"/>
   </action-method>
 
-  <action-record name="action-sale-order-line-record-update-old-price-and-qty"
-    model="com.axelor.apps.sale.db.SaleOrderLine">
-    <field name="priceBeforeUpdate" expr="eval: price" if="priceBeforeUpdate == 0"/>
-  </action-record>
+  <action-method name="action-sale-order-line-method-check-coefficient-config">
+    <call class="com.axelor.apps.businessproject.web.SaleOrderLineController"
+      method="checkCoefficientConfig"/>
+  </action-method>
 
   <action-record name="action-sale-order-line-record-is-form-readonly"
     model="com.axelor.apps.sale.db.SaleOrderLine">
@@ -1167,7 +1171,8 @@
   </action-method>
 
   <action-attrs name="action-sale-order-line-attrs-set-price-read-only">
-    <attribute name="readonlyIf" for="subSaleOrderLineList.price" expr="eval: __config__.app.getApp('construction')?.getIsUnitPriceCalculationEnabled()"/>
+    <attribute name="readonlyIf" for="subSaleOrderLineList.price"
+      expr="eval: __config__.app.getApp('construction')?.getIsUnitPriceCalculationEnabled()"/>
   </action-attrs>
 
 

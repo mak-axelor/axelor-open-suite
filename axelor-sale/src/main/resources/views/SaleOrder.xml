@@ -2387,7 +2387,8 @@
   </action-attrs>
 
   <action-attrs name="action-sale-order-attrs-set-price-read-only">
-    <attribute name="readonlyIf" for="expendableSaleOrderLineList.price" expr="eval: __config__.app.getApp('construction')?.getIsUnitPriceCalculationEnabled()"/>
+    <attribute name="readonlyIf" for="expendableSaleOrderLineList.price"
+      expr="eval: __config__.app.getApp('construction')?.getIsUnitPriceCalculationEnabled()"/>
   </action-attrs>
 
 </object-views>
