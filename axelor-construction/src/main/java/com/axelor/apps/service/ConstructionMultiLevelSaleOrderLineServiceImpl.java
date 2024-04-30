@@ -8,7 +8,6 @@ import com.axelor.apps.sale.db.SaleOrderLine;
 import com.axelor.apps.sale.db.repo.SaleOrderLineRepository;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.service.MultiLevelSaleOrderLineServiceImpl;
-import com.axelor.apps.sale.service.app.AppSaleService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderComputeService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
 import com.axelor.common.ObjectUtils;
@@ -52,19 +51,12 @@ public class ConstructionMultiLevelSaleOrderLineServiceImpl
     }
     BigDecimal quantity = saleOrderLine.getQty();
     BigDecimal totalPrice = BigDecimal.ZERO;
-    BigDecimal costPriceTotal = BigDecimal.ZERO;
     int i = 1;
 
     for (SaleOrderLine line : items) {
       line.setLineIndex(parent + "." + i);
       compute(line, saleOrder, parent + "." + i);
       totalPrice = totalPrice.add(line.getExTaxTotal());
-      if (Beans.get(AppConstructionRepository.class)
-          .all()
-          .fetchOne()
-          .getIsUnitPriceCalculationEnabled()) {
-        costPriceTotal = costPriceTotal.add(line.getCostPrice().multiply(line.getQty()));
-      }
       i++;
     }
     totalPrice = quantity.equals(BigDecimal.ZERO) ? BigDecimal.ZERO : totalPrice;
@@ -79,21 +71,13 @@ public class ConstructionMultiLevelSaleOrderLineServiceImpl
         .all()
         .fetchOne()
         .getIsUnitPriceCalculationEnabled()) {
-      saleOrderLine.setCostPrice(
-          costPriceTotal.divide(
-              quantity, appBaseService.getNbDecimalDigitForUnitPrice(), RoundingMode.HALF_EVEN));
-      if (saleOrderLine.getCostPrice().compareTo(BigDecimal.ZERO) == 0) {
-        saleOrderLine.setGrossMarging(BigDecimal.ZERO);
-      } else {
-        saleOrderLine.setGrossMarging(
-            saleOrderLine
-                .getPrice()
-                .divide(
-                    saleOrderLine.getCostPrice(),
-                    AppSaleService.DEFAULT_NB_DECIMAL_DIGITS,
-                    RoundingMode.HALF_EVEN)
-                .subtract(saleOrderLine.getGeneralExpenses().add(BigDecimal.ONE)));
-      }
+      saleOrderLine.setGrossMarging(
+          price
+              .divide(
+                  saleOrderLine.getCostPrice(),
+                  appBaseService.getNbDecimalDigitForUnitPrice(),
+                  RoundingMode.HALF_EVEN)
+              .subtract(BigDecimal.ONE));
     }
     computeAllValues(saleOrderLine, saleOrder);
     saleOrderLine.setPriceBeforeUpdate(saleOrderLine.getPrice());
@@ -109,18 +93,14 @@ public class ConstructionMultiLevelSaleOrderLineServiceImpl
         .fetchOne()
         .getIsUnitPriceCalculationEnabled()) {
 
-      if (saleOrderLine.getCostPrice().compareTo(BigDecimal.ZERO) == 0) {
-        saleOrderLine.setGrossMarging(BigDecimal.ZERO);
-      } else {
-        saleOrderLine.setGrossMarging(
-            saleOrderLine
-                .getPrice()
-                .divide(
-                    saleOrderLine.getCostPrice(),
-                    AppSaleService.DEFAULT_NB_DECIMAL_DIGITS,
-                    RoundingMode.HALF_EVEN)
-                .subtract(saleOrderLine.getGeneralExpenses().add(BigDecimal.ONE)));
-      }
+      saleOrderLine.setGrossMarging(
+          saleOrderLine
+              .getPrice()
+              .divide(
+                  saleOrderLine.getCostPrice(),
+                  appBaseService.getNbDecimalDigitForUnitPrice(),
+                  RoundingMode.HALF_EVEN)
+              .subtract(BigDecimal.ONE));
     }
   }
 }

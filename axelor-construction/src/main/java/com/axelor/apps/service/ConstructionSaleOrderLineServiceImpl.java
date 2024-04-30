@@ -98,6 +98,7 @@ public class ConstructionSaleOrderLineServiceImpl
             .getProduct()
             .getShippingCoef()
             .add(saleOrderLine.getProduct().getManagPriceCoef()));
+    saleOrderLine.setPurchasePrice(saleOrderLine.getProduct().getPurchasePrice());
     saleOrderLine.setCostPrice(saleOrderLine.getProduct().getCostPrice());
     super.computeProductInformation(saleOrderLine, saleOrder);
   }
@@ -121,12 +122,7 @@ public class ConstructionSaleOrderLineServiceImpl
         (Boolean) productCompanyService.get(product, "inAti", saleOrder.getCompany());
 
     BigDecimal productSalePrice =
-        saleOrderLine
-            .getCostPrice()
-            .multiply(
-                saleOrderLine
-                    .getGrossMarging()
-                    .add(saleOrderLine.getGeneralExpenses().add(BigDecimal.ONE)));
+        saleOrderLine.getCostPrice().multiply(saleOrderLine.getGrossMarging().add(BigDecimal.ONE));
 
     return (productInAti == resultInAti)
         ? productSalePrice
