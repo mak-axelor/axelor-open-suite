@@ -8,7 +8,9 @@
     <field name="qty"/>
   </grid>
 
-  <grid name="sub-product-editable-grid" title="Sub Products" model="com.axelor.apps.base.db.SubProduct" editable="true" expandable="true" expandable-form-view="sub-product-nested-form">
+  <grid name="sub-product-editable-grid" title="Sub Products"
+    model="com.axelor.apps.base.db.SubProduct" editable="true" expandable="true"
+    expandable-form-view="sub-product-nested-form">
     <field name="product"/>
     <field name="qty"/>
   </grid>
@@ -22,11 +24,11 @@
     </panel>
   </form>
 
-  <form name="sub-product-nested-form" title="Sub product" model="com.axelor.apps.base.db.SubProduct">
-    <panel-related field="subProductList" colSpan="12"
-                   form-view="sub-product-form" grid-view="sub-product-editable-grid"
-                   x-expandable-form="sub-product-form" x-expand-all="subProductList"
-                   x-display-mode="tree" x-expandable="true" x-show-header="false"/>
+  <form name="sub-product-nested-form" title="Sub product"
+    model="com.axelor.apps.base.db.SubProduct">
+    <panel-related field="subProductList" colSpan="12" form-view="sub-product-form"
+      grid-view="sub-product-editable-grid" x-expandable-form="sub-product-form"
+      x-expand-all="subProductList" x-display-mode="tree" x-expandable="true" x-show-header="false"/>
   </form>
 
 </object-views>
